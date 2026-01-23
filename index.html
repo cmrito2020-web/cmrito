@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Регистрация участников</title>
+<title>Қатысушыларды тіркеу/Регистрация участников</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -90,31 +90,31 @@ button {
     <img src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png">
   </div>
 
-  <h2>Регистрация участника</h2>
+  <h2>Қатысушыны тіркеу/Регистрация участника</h2>
 
   <form id="regForm">
 
     <!-- РАЙОН -->
-    <label>Район</label>
+    <label>Аудан/Район</label>
     <div class="select-box">
-      <input type="text" class="select-input" id="districtInput" placeholder="Выберите район" readonly>
+      <input type="text" class="select-input" id="districtInput" placeholder="Ауданды таңдаңыз/Выберите район" readonly>
       <div class="options" id="districtOptions"></div>
     </div>
     <input type="hidden" name="district" id="districtHidden" required>
 
     <!-- УЧРЕЖДЕНИЕ -->
-    <label>Название учреждения</label>
+    <label>Мекеменің атауы / Название учреждения</label>
     <input type="text" name="organization" required>
 
     <!-- ФИО -->
-    <label>ФИО</label>
+    <label>ТАӘ/ФИО</label>
     <div class="select-box">
-      <input type="text" class="select-input" id="fioInput" placeholder="Выберите ФИО">
+      <input type="text" class="select-input" id="fioInput" placeholder="ТАӘ-ні таңдаңыз/Выберите ФИО">
       <div class="options" id="fioOptions"></div>
     </div>
     <input type="hidden" name="fio" id="fioHidden" required>
 
-    <button type="submit">Отправить</button>
+    <button type="submit">Жіберу/Отправить</button>
   </form>
 
   <div id="result"></div>
@@ -198,7 +198,7 @@ document.getElementById("regForm").addEventListener("submit", function(e) {
   e.preventDefault();
 
   if (!districtHidden.value || !fioHidden.value) {
-    alert("Выберите район и ФИО из списка");
+    alert("Ауданды және ТАӘ-ні тізімнен таңдаңыз/Выберите район и ФИО из списка");
     return;
   }
 
@@ -207,12 +207,12 @@ document.getElementById("regForm").addEventListener("submit", function(e) {
     .then(t => {
       document.getElementById("result").innerHTML =
         t.trim()==="OK"
-        ? "<div class='success'>✅ Успешно отправлено</div>"
-        : "<div class='error'>❌ Ошибка: "+t+"</div>";
+        ? "<div class='success'>✅ Сәтті жіберілді/Успешно отправлено</div>"
+        : "<div class='error'>❌ Қате/Ошибка: "+t+"</div>";
       this.reset();
       districtInput.value = fioInput.value = "";
     })
-    .catch(()=>result.innerHTML="<div class='error'>Ошибка соединения</div>");
+    .catch(()=>result.innerHTML="<div class='error'>Қосылу қате/Ошибка соединения</div>");
 });
 </script>
 
