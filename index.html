@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Регистрация участников</title>
+<style>
+  :root{
+    --bg: #f3f6ff;
+    --card: #ffffff;
+    --text: #1f2a44;
+    --accent: #3b82f6;
+    --accent2: #22c55e;
+    --border: #e2e8f0;
+    --shadow: 0 10px 30px rgba(0,0,0,0.08);
+  }
+
+  body{
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+  }
+
+  .container{
+    max-width: 520px;
+    margin: 20px auto;
+    padding: 16px;
+  }
+
+  .card{
+    background: var(--card);
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+  }
+
+  h2{
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: 22px;
+  }
+
+  p{
+    margin: 0 0 18px;
+    color: #475569;
+  }
+
+  label{
+    display:block;
+    margin-top: 12px;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  input, select{
+    width:100%;
+    padding: 12px;
+    margin-top: 6px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    font-size: 16px;
+  }
+
+  .btn{
+    width:100%;
+    padding: 14px;
+    margin-top: 18px;
+    border:none;
+    border-radius: 14px;
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(90deg, var(--accent), #2563eb);
+    cursor: pointer;
+  }
+
+  .btn:active{
+    transform: translateY(1px);
+  }
+
+  .success{
+    color: var(--accent2);
+    margin-top: 10px;
+    font-weight: 600;
+  }
+
+  .error{
+    color: #ef4444;
+    margin-top: 10px;
+    font-weight: 600;
+  }
+
+  .row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 480px){
+    .row{
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h2>Регистрация участника</h2>
+    <p>Заполните данные, чтобы зарегистрировать участника на мероприятие.</p>
+
+    <label>Район</label>
+    <input type="text" id="region" placeholder="Введите район">
+
+    <label>Название учреждения</label>
+    <input type="text" id="institution" placeholder="Введите название учреждения">
+
+    <label>ФИО</label>
+    <select id="name">
+      <option value="">Выберите ФИО</option>
+      <option value="Иванов Иван Иванович">Иванов Иван Иванович</option>
+      <option value="Петров Петр Петрович">Петров Петр Петрович</option>
+      <option value="Сидорова Анна Сергеевна">Сидорова Анна Сергеевна</option>
+      <!-- Добавь свои ФИО сюда -->
+    </select>
+
+    <label>Должность</label>
+    <input type="text" id="position" placeholder="Введите должность">
+
+    <button class="btn" onclick="sendForm()">Отправить</button>
+
+    <div id="result"></div>
+  </div>
+</div>
+
+<script>
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWF20nTqRrMSmDXvOXOukbm2IZBF7IHDmpo3RJKZShiu6DRk34FCs2IWo0DMTcml/exec";
+
+function sendForm() {
+  const region = document.getElementById("region").value.trim();
+  const institution = document.getElementById("institution").value.trim();
+  const name = document.getElementById("name").value;
+  const position = document.getElementById("position").value.trim();
+
+  const result = document.getElementById("result");
+  result.innerHTML = "";
+
+  if (!region || !institution || !name || !position) {
+    result.className = "error";
+    result.textContent = "Пожалуйста, заполните все поля.";
+    return;
+  }
+
+  const data = { region, institution, name, position };
+
+  fetch(WEB_APP_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  })
+  .then(res => res.json())
+  .then(res => {
+    if(res.status === "success"){
+      result.className = "success";
+      result.textContent = "Успешно отправлено!";
+
+      document.getElementById("region").value = "";
+      document.getElementById("institution").value = "";
+      document.getElementById("name").value = "";
+      document.getElementById("position").value = "";
+    } else {
+      result.className = "error";
+      result.textContent = res.message || "Ошибка отправки.";
+    }
+  })
+  .catch(err => {
+    result.className = "error";
+    result.textContent = "Ошибка отправки. Попробуйте позже.";
+  });
+}
+</script>
+
+</body>
+</html>
