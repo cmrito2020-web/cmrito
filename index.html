@@ -1,184 +1,111 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Регистрация участников</title>
-<style>
-  :root{
-    --bg: #f3f6ff;
-    --card: #ffffff;
-    --text: #1f2a44;
-    --accent: #3b82f6;
-    --accent2: #22c55e;
-    --border: #e2e8f0;
-    --shadow: 0 10px 30px rgba(0,0,0,0.08);
-  }
-
-  body{
-    margin:0;
-    font-family: Arial, sans-serif;
-    background: var(--bg);
-  }
-
-  .container{
-    max-width: 520px;
-    margin: 20px auto;
-    padding: 16px;
-  }
-
-  .card{
-    background: var(--card);
-    border-radius: 18px;
-    padding: 18px;
-    box-shadow: var(--shadow);
-  }
-
-  h2{
-    margin: 0 0 8px;
-    color: var(--text);
-    font-size: 22px;
-  }
-
-  p{
-    margin: 0 0 18px;
-    color: #475569;
-  }
-
-  label{
-    display:block;
-    margin-top: 12px;
-    font-weight: 600;
-    color: var(--text);
-  }
-
-  input, select{
-    width:100%;
-    padding: 12px;
-    margin-top: 6px;
-    border-radius: 12px;
-    border: 1px solid var(--border);
-    font-size: 16px;
-  }
-
-  .btn{
-    width:100%;
-    padding: 14px;
-    margin-top: 18px;
-    border:none;
-    border-radius: 14px;
-    font-size: 16px;
-    font-weight: 700;
-    color: white;
-    background: linear-gradient(90deg, var(--accent), #2563eb);
-    cursor: pointer;
-  }
-
-  .btn:active{
-    transform: translateY(1px);
-  }
-
-  .success{
-    color: var(--accent2);
-    margin-top: 10px;
-    font-weight: 600;
-  }
-
-  .error{
-    color: #ef4444;
-    margin-top: 10px;
-    font-weight: 600;
-  }
-
-  .row{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  @media (max-width: 480px){
-    .row{
-      grid-template-columns: 1fr;
+  <meta charset="UTF-8">
+  <title>Регистрация участников</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
     }
-  }
-</style>
+    .container {
+      max-width: 420px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    label {
+      font-weight: bold;
+      margin-top: 10px;
+      display: block;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      font-size: 16px;
+    }
+    button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin-top: 15px;
+    }
+    button:active {
+      opacity: 0.8;
+    }
+    .success {
+      color: green;
+      text-align: center;
+      margin-top: 10px;
+    }
+    .error {
+      color: red;
+      text-align: center;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
-  <div class="card">
-    <h2>Регистрация участника</h2>
-    <p>Заполните данные, чтобы зарегистрировать участника на мероприятие.</p>
+  <h2>Регистрация участника</h2>
 
+  <form id="regForm">
     <label>Район</label>
-    <input type="text" id="region" placeholder="Введите район">
+    <input type="text" name="district" required>
 
     <label>Название учреждения</label>
-    <input type="text" id="institution" placeholder="Введите название учреждения">
+    <input type="text" name="organization" required>
 
     <label>ФИО</label>
-    <select id="name">
-      <option value="">Выберите ФИО</option>
-      <option value="Иванов Иван Иванович">Иванов Иван Иванович</option>
-      <option value="Петров Петр Петрович">Петров Петр Петрович</option>
-      <option value="Сидорова Анна Сергеевна">Сидорова Анна Сергеевна</option>
-      <!-- Добавь свои ФИО сюда -->
-    </select>
+    <input type="text" name="fio" required>
 
     <label>Должность</label>
-    <input type="text" id="position" placeholder="Введите должность">
+    <input type="text" name="position" required>
 
-    <button class="btn" onclick="sendForm()">Отправить</button>
+    <button type="submit">Отправить</button>
+  </form>
 
-    <div id="result"></div>
-  </div>
+  <div id="result"></div>
 </div>
 
 <script>
-const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwWf20nTqRrMSmDXv0XOukbm2lZBF7lHDmpo3RJKZSthiu6DRk34FCs2lWo0DMTCmI/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwWf20nTqRrMSmDXv0XOukbm2lZBF7lHDmpo3RJKZSthiu6DRk34FCs2lWo0DMTCmI/exec";
 
-function sendForm() {
-  const region = document.getElementById("region").value.trim();
-  const institution = document.getElementById("institution").value.trim();
-  const name = document.getElementById("name").value;
-  const position = document.getElementById("position").value.trim();
+document.getElementById("regForm").addEventListener("submit", function(e) {
+  e.preventDefault();
 
+  const formData = new FormData(this);
   const result = document.getElementById("result");
-  result.innerHTML = "";
 
-  if (!region || !institution || !name || !position) {
-    result.className = "error";
-    result.textContent = "Пожалуйста, заполните все поля.";
-    return;
-  }
-
-  const data = { region, institution, name, position };
-
-  fetch(WEB_APP_URL, {
+  fetch(SCRIPT_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
+    body: formData
   })
-  .then(res => res.json())
-  .then(res => {
-    if(res.status === "success"){
-      result.className = "success";
-      result.textContent = "Успешно отправлено!";
-
-      document.getElementById("region").value = "";
-      document.getElementById("institution").value = "";
-      document.getElementById("name").value = "";
-      document.getElementById("position").value = "";
+  .then(res => res.text())
+  .then(text => {
+    if (text === "OK") {
+      result.innerHTML = "<div class='success'>✅ Успешно отправлено</div>";
+      this.reset();
     } else {
-      result.className = "error";
-      result.textContent = res.message || "Ошибка отправки.";
+      result.innerHTML = "<div class='error'>❌ Ошибка: " + text + "</div>";
     }
   })
   .catch(err => {
-    result.className = "error";
-    result.textContent = "Ошибка отправки. Попробуйте позже.";
+    result.innerHTML = "<div class='error'>Ошибка соединения</div>";
   });
-}
+});
 </script>
 
 </body>
