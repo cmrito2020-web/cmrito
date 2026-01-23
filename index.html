@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Регистрация участников</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -33,6 +34,7 @@
       padding: 10px;
       margin-top: 5px;
       font-size: 16px;
+      box-sizing: border-box;
     }
     button {
       background: #1976d2;
@@ -40,9 +42,10 @@
       border: none;
       border-radius: 5px;
       margin-top: 15px;
+      cursor: pointer;
     }
-    button:active {
-      opacity: 0.8;
+    button:hover {
+      background: #1565c0;
     }
     .success {
       color: green;
@@ -69,7 +72,22 @@
     <input type="text" name="organization" required>
 
     <label>ФИО</label>
-    <input type="text" name="fio" required>
+    <input 
+      type="text" 
+      name="fio" 
+      list="fioList" 
+      required 
+      placeholder="Начните вводить ФИО"
+    >
+
+    <datalist id="fioList">
+      <option value="Иванов Иван Иванович">
+      <option value="Петров Петр Петрович">
+      <option value="Сидорова Анна Сергеевна">
+      <option value="Ахметов Нурлан Ерланович">
+      <option value="Сарсенова Гульдана Муратовна">
+      <option value="Калиев Саят Ерланович">
+    </datalist>
 
     <label>Должность</label>
     <input type="text" name="position" required>
@@ -95,15 +113,15 @@ document.getElementById("regForm").addEventListener("submit", function(e) {
   })
   .then(res => res.text())
   .then(text => {
-    if (text === "OK") {
+    if (text.trim() === "OK") {
       result.innerHTML = "<div class='success'>✅ Успешно отправлено</div>";
       this.reset();
     } else {
       result.innerHTML = "<div class='error'>❌ Ошибка: " + text + "</div>";
     }
   })
-  .catch(err => {
-    result.innerHTML = "<div class='error'>Ошибка соединения</div>";
+  .catch(() => {
+    result.innerHTML = "<div class='error'>❌ Ошибка соединения</div>";
   });
 });
 </script>
