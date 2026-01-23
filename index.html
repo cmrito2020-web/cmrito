@@ -1,108 +1,87 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Регистрация участников</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
+<title>Регистрация участников</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 20px;
-    }
-    .container {
-      max-width: 420px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      margin: auto;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  padding: 20px;
+}
+.container {
+  max-width: 420px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  margin: auto;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.logo {
+  text-align: center;
+  margin-bottom: 15px;
+}
+.logo img {
+  max-width: 160px;
+}
+h2 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+label {
+  font-weight: bold;
+  margin-top: 10px;
+  display: block;
+}
+input, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  font-size: 16px;
+}
+button {
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  margin-top: 15px;
+  cursor: pointer;
+}
 
-    .logo {
-      text-align: center;
-      margin-bottom: 15px;
-    }
-    .logo img {
-      max-width: 160px;
-      width: 100%;
-    }
+/* === SEARCH SELECT === */
+.select-box {
+  position: relative;
+}
+.select-input {
+  cursor: pointer;
+}
+.options {
+  position: absolute;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 5px;
+  display: none;
+  z-index: 10;
+}
+.option {
+  padding: 10px;
+  cursor: pointer;
+}
+.option:hover {
+  background: #1976d2;
+  color: #fff;
+}
 
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      display: block;
-    }
-
-    input, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      font-size: 16px;
-      box-sizing: border-box;
-    }
-
-    button {
-      background: #1976d2;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      margin-top: 15px;
-      cursor: pointer;
-    }
-
-    /* === SEARCH SELECT === */
-    .select-box {
-      position: relative;
-    }
-
-    .select-input {
-      cursor: pointer;
-      background: #fff;
-    }
-
-    .options {
-      position: absolute;
-      width: 100%;
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ccc;
-      background: #fff;
-      border-radius: 5px;
-      display: none;
-      z-index: 10;
-    }
-
-    .option {
-      padding: 10px;
-      cursor: pointer;
-    }
-
-    .option:hover {
-      background: #1976d2;
-      color: #fff;
-    }
-
-    .success {
-      color: green;
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    .error {
-      color: red;
-      text-align: center;
-      margin-top: 10px;
-    }
-  </style>
+.success { color: green; text-align: center; margin-top: 10px; }
+.error { color: red; text-align: center; margin-top: 10px; }
+</style>
 </head>
+
 <body>
 
 <div class="container">
@@ -115,28 +94,25 @@
 
   <form id="regForm">
 
-    <!-- РАЙОН С ПОИСКОМ -->
+    <!-- РАЙОН -->
     <label>Район</label>
     <div class="select-box">
-      <input type="text" class="select-input" placeholder="Выберите район" readonly>
+      <input type="text" class="select-input" id="districtInput" placeholder="Выберите район" readonly>
       <div class="options" id="districtOptions"></div>
     </div>
     <input type="hidden" name="district" id="districtHidden" required>
 
+    <!-- УЧРЕЖДЕНИЕ -->
     <label>Название учреждения</label>
     <input type="text" name="organization" required>
 
+    <!-- ФИО -->
     <label>ФИО</label>
-    <input type="text" name="fio" list="fioList" required placeholder="Начните вводить ФИО">
-
-    <datalist id="fioList">
-      <option value="Иванов Иван Иванович">
-      <option value="Петров Петр Петрович">
-      <option value="Сидорова Анна Сергеевна">
-      <option value="Ахметов Нурлан Ерланович">
-      <option value="Сарсенова Гульдана Муратовна">
-      <option value="Калиев Саят Ерланович">
-    </datalist>
+    <div class="select-box">
+      <input type="text" class="select-input" id="fioInput" placeholder="Выберите ФИО">
+      <div class="options" id="fioOptions"></div>
+    </div>
+    <input type="hidden" name="fio" id="fioHidden" required>
 
     <button type="submit">Отправить</button>
   </form>
@@ -145,81 +121,98 @@
 </div>
 
 <script>
+/* ===== ДАННЫЕ ===== */
 const districts = [
-  "Айыртау ауданы",
-  "Ақжар ауданы",
-  "Аққайың ауданы",
-  "Мағжан Жұмабаев ауданы",
-  "Есiл ауданы",
-  "Жамбыл ауданы",
-  "Қызылжар ауданы",
-  "Мамлют ауданы",
-  "Ғабит Мүсірепов ауданы",
-  "Тайынша ауданы",
-  "Тимирязев ауданы",
-  "Уәлиханов ауданы",
-  "Шал ақын ауданы",
-  "Петропавл қаласы"
+  "Айыртау ауданы","Ақжар ауданы","Аққайың ауданы","Мағжан Жұмабаев ауданы",
+  "Есiл ауданы","Жамбыл ауданы","Қызылжар ауданы","Мамлют ауданы",
+  "Ғабит Мүсірепов ауданы","Тайынша ауданы","Тимирязев ауданы",
+  "Уәлиханов ауданы","Шал ақын ауданы","Петропавл қаласы"
 ];
 
-const input = document.querySelector(".select-input");
-const optionsBox = document.getElementById("districtOptions");
-const hidden = document.getElementById("districtHidden");
+const fios = [
+  "Иванов Иван Иванович",
+  "Петров Петр Петрович",
+  "Сидорова Анна Сергеевна",
+  "Ахметов Нурлан Ерланович",
+  "Сарсенова Гульдана Муратовна",
+  "Калиев Саят Ерланович"
+];
 
-function renderOptions(filter = "") {
-  optionsBox.innerHTML = "";
-  districts
-    .filter(d => d.toLowerCase().includes(filter.toLowerCase()))
-    .forEach(d => {
-      const div = document.createElement("div");
-      div.className = "option";
-      div.textContent = d;
-      div.onclick = () => {
-        input.value = d;
-        hidden.value = d;
-        optionsBox.style.display = "none";
-      };
-      optionsBox.appendChild(div);
+/* ===== ФУНКЦИЯ SELECT С ПОИСКОМ ===== */
+function initSearchSelect(input, optionsBox, hidden, data, readonly=false) {
+  function render(filter="") {
+    optionsBox.innerHTML = "";
+    data.filter(v => v.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(v => {
+          const div = document.createElement("div");
+          div.className = "option";
+          div.textContent = v;
+          div.onclick = () => {
+            input.value = v;
+            hidden.value = v;
+            optionsBox.style.display = "none";
+          };
+          optionsBox.appendChild(div);
+        });
+  }
+
+  input.addEventListener("click", () => {
+    optionsBox.style.display = "block";
+    render();
+  });
+
+  if (!readonly) {
+    input.addEventListener("input", () => {
+      optionsBox.style.display = "block";
+      render(input.value);
     });
+  }
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".select-box")) {
+      optionsBox.style.display = "none";
+    }
+  });
 }
 
-input.addEventListener("click", () => {
-  optionsBox.style.display = "block";
-  renderOptions();
-});
+/* ===== ИНИЦИАЛИЗАЦИЯ ===== */
+initSearchSelect(
+  document.getElementById("districtInput"),
+  document.getElementById("districtOptions"),
+  document.getElementById("districtHidden"),
+  districts,
+  true
+);
 
-document.addEventListener("click", e => {
-  if (!e.target.closest(".select-box")) {
-    optionsBox.style.display = "none";
-  }
-});
+initSearchSelect(
+  document.getElementById("fioInput"),
+  document.getElementById("fioOptions"),
+  document.getElementById("fioHidden"),
+  fios
+);
 
-/* === FORM SUBMIT === */
+/* ===== ОТПРАВКА ===== */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
 
 document.getElementById("regForm").addEventListener("submit", function(e) {
   e.preventDefault();
 
-  if (!hidden.value) {
-    alert("Выберите район из списка");
+  if (!districtHidden.value || !fioHidden.value) {
+    alert("Выберите район и ФИО из списка");
     return;
   }
 
-  const formData = new FormData(this);
-  const result = document.getElementById("result");
-
-  fetch(SCRIPT_URL, { method: "POST", body: formData })
+  fetch(SCRIPT_URL, { method: "POST", body: new FormData(this) })
     .then(r => r.text())
     .then(t => {
-      if (t.trim() === "OK") {
-        result.innerHTML = "<div class='success'>✅ Успешно отправлено</div>";
-        this.reset();
-        input.value = "";
-      } else {
-        result.innerHTML = "<div class='error'>❌ Ошибка: " + t + "</div>";
-      }
+      document.getElementById("result").innerHTML =
+        t.trim()==="OK"
+        ? "<div class='success'>✅ Успешно отправлено</div>"
+        : "<div class='error'>❌ Ошибка: "+t+"</div>";
+      this.reset();
+      districtInput.value = fioInput.value = "";
     })
-    .catch(() => result.innerHTML = "<div class='error'>❌ Ошибка соединения</div>");
+    .catch(()=>result.innerHTML="<div class='error'>Ошибка соединения</div>");
 });
 </script>
 
