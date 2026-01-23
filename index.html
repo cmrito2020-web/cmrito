@@ -85,12 +85,39 @@
   <h2>Регистрация участника</h2>
 
   <form id="regForm">
-    <label>Район</label>
-    <input type="text" name="district" required>
 
+    <!-- РАЙОН -->
+    <label>Район</label>
+    <input 
+      type="text" 
+      name="district" 
+      list="districtList" 
+      required 
+      placeholder="Выберите или начните вводить район"
+    >
+
+    <datalist id="districtList">
+      <option value="Айыртау ауданы">
+      <option value="Ақжар ауданы">
+      <option value="Аққайың ауданы">
+      <option value="Мағжан Жұмабаев ауданы">
+      <option value="Есiл ауданы">
+      <option value="Жамбыл ауданы">
+      <option value="Қызылжар ауданы">
+      <option value="Мамлют ауданы">
+      <option value="Ғабит Мүсірепов ауданы">
+      <option value="Тайынша ауданы">
+      <option value="Тимирязев ауданы">
+      <option value="Уәлиханов ауданы">
+      <option value="Шал ақын ауданы">
+      <option value="Петропавл қаласы">
+    </datalist>
+
+    <!-- УЧРЕЖДЕНИЕ -->
     <label>Название учреждения</label>
     <input type="text" name="organization" required>
 
+    <!-- ФИО -->
     <label>ФИО</label>
     <input 
       type="text" 
@@ -108,9 +135,6 @@
       <option value="Сарсенова Гульдана Муратовна">
       <option value="Калиев Саят Ерланович">
     </datalist>
-
-    <label>Должность</label>
-    <input type="text" name="position" required>
 
     <button type="submit">Отправить</button>
   </form>
