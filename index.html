@@ -28,18 +28,19 @@
     .logo img {
       max-width: 160px;
       width: 100%;
-      height: auto;
     }
 
     h2 {
       text-align: center;
       margin-bottom: 20px;
     }
+
     label {
       font-weight: bold;
       margin-top: 10px;
       display: block;
     }
+
     input, button {
       width: 100%;
       padding: 10px;
@@ -47,22 +48,54 @@
       font-size: 16px;
       box-sizing: border-box;
     }
+
     button {
       background: #1976d2;
-      color: white;
+      color: #fff;
       border: none;
       border-radius: 5px;
       margin-top: 15px;
       cursor: pointer;
     }
-    button:hover {
-      background: #1565c0;
+
+    /* === SEARCH SELECT === */
+    .select-box {
+      position: relative;
     }
+
+    .select-input {
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .options {
+      position: absolute;
+      width: 100%;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      background: #fff;
+      border-radius: 5px;
+      display: none;
+      z-index: 10;
+    }
+
+    .option {
+      padding: 10px;
+      cursor: pointer;
+    }
+
+    .option:hover {
+      background: #1976d2;
+      color: #fff;
+    }
+
     .success {
       color: green;
       text-align: center;
       margin-top: 10px;
     }
+
     .error {
       color: red;
       text-align: center;
@@ -74,58 +107,27 @@
 
 <div class="container">
 
-  <!-- ЛОГО -->
   <div class="logo">
-    <img 
-      src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png" 
-      alt="CMRITO logo"
-    >
+    <img src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png">
   </div>
 
   <h2>Регистрация участника</h2>
 
   <form id="regForm">
 
-    <!-- РАЙОН -->
+    <!-- РАЙОН С ПОИСКОМ -->
     <label>Район</label>
-    <input 
-      type="text" 
-      name="district" 
-      list="districtList" 
-      required 
-      placeholder="Выберите или начните вводить район"
-    >
+    <div class="select-box">
+      <input type="text" class="select-input" placeholder="Выберите район" readonly>
+      <div class="options" id="districtOptions"></div>
+    </div>
+    <input type="hidden" name="district" id="districtHidden" required>
 
-    <datalist id="districtList">
-      <option value="Айыртау ауданы">
-      <option value="Ақжар ауданы">
-      <option value="Аққайың ауданы">
-      <option value="Мағжан Жұмабаев ауданы">
-      <option value="Есiл ауданы">
-      <option value="Жамбыл ауданы">
-      <option value="Қызылжар ауданы">
-      <option value="Мамлют ауданы">
-      <option value="Ғабит Мүсірепов ауданы">
-      <option value="Тайынша ауданы">
-      <option value="Тимирязев ауданы">
-      <option value="Уәлиханов ауданы">
-      <option value="Шал ақын ауданы">
-      <option value="Петропавл қаласы">
-    </datalist>
-
-    <!-- УЧРЕЖДЕНИЕ -->
     <label>Название учреждения</label>
     <input type="text" name="organization" required>
 
-    <!-- ФИО -->
     <label>ФИО</label>
-    <input 
-      type="text" 
-      name="fio" 
-      list="fioList" 
-      required 
-      placeholder="Начните вводить ФИО"
-    >
+    <input type="text" name="fio" list="fioList" required placeholder="Начните вводить ФИО">
 
     <datalist id="fioList">
       <option value="Иванов Иван Иванович">
@@ -143,30 +145,81 @@
 </div>
 
 <script>
+const districts = [
+  "Айыртау ауданы",
+  "Ақжар ауданы",
+  "Аққайың ауданы",
+  "Мағжан Жұмабаев ауданы",
+  "Есiл ауданы",
+  "Жамбыл ауданы",
+  "Қызылжар ауданы",
+  "Мамлют ауданы",
+  "Ғабит Мүсірепов ауданы",
+  "Тайынша ауданы",
+  "Тимирязев ауданы",
+  "Уәлиханов ауданы",
+  "Шал ақын ауданы",
+  "Петропавл қаласы"
+];
+
+const input = document.querySelector(".select-input");
+const optionsBox = document.getElementById("districtOptions");
+const hidden = document.getElementById("districtHidden");
+
+function renderOptions(filter = "") {
+  optionsBox.innerHTML = "";
+  districts
+    .filter(d => d.toLowerCase().includes(filter.toLowerCase()))
+    .forEach(d => {
+      const div = document.createElement("div");
+      div.className = "option";
+      div.textContent = d;
+      div.onclick = () => {
+        input.value = d;
+        hidden.value = d;
+        optionsBox.style.display = "none";
+      };
+      optionsBox.appendChild(div);
+    });
+}
+
+input.addEventListener("click", () => {
+  optionsBox.style.display = "block";
+  renderOptions();
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".select-box")) {
+    optionsBox.style.display = "none";
+  }
+});
+
+/* === FORM SUBMIT === */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
 
 document.getElementById("regForm").addEventListener("submit", function(e) {
   e.preventDefault();
 
+  if (!hidden.value) {
+    alert("Выберите район из списка");
+    return;
+  }
+
   const formData = new FormData(this);
   const result = document.getElementById("result");
 
-  fetch(SCRIPT_URL, {
-    method: "POST",
-    body: formData
-  })
-  .then(res => res.text())
-  .then(text => {
-    if (text.trim() === "OK") {
-      result.innerHTML = "<div class='success'>✅ Успешно отправлено</div>";
-      this.reset();
-    } else {
-      result.innerHTML = "<div class='error'>❌ Ошибка: " + text + "</div>";
-    }
-  })
-  .catch(() => {
-    result.innerHTML = "<div class='error'>❌ Ошибка соединения</div>";
-  });
+  fetch(SCRIPT_URL, { method: "POST", body: formData })
+    .then(r => r.text())
+    .then(t => {
+      if (t.trim() === "OK") {
+        result.innerHTML = "<div class='success'>✅ Успешно отправлено</div>";
+        this.reset();
+        input.value = "";
+      } else {
+        result.innerHTML = "<div class='error'>❌ Ошибка: " + t + "</div>";
+      }
+    })
+    .catch(() => result.innerHTML = "<div class='error'>❌ Ошибка соединения</div>");
 });
 </script>
 
