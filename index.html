@@ -15,15 +15,15 @@ body { font-family: Arial; background:#f4f6f8; padding:20px }
 label { font-weight:bold; margin-top:12px; display:block }
 input,button { width:100%; padding:10px; margin-top:5px; font-size:16px }
 button { background:#1976d2; color:#fff; border:none; border-radius:5px }
+.select-box { position:relative }
 .options {
   border:1px solid #ccc; max-height:200px; overflow:auto;
   display:none; position:absolute; background:#fff; width:100%; z-index:10
 }
 .option { padding:8px; cursor:pointer }
 .option:hover { background:#1976d2; color:#fff }
-.select-box { position:relative }
-.success{color:green;text-align:center}
-.error{color:red;text-align:center}
+.success{color:green;text-align:center;margin-top:10px}
+.error{color:red;text-align:center;margin-top:10px}
 </style>
 </head>
 
@@ -38,96 +38,117 @@ button { background:#1976d2; color:#fff; border:none; border-radius:5px }
 
 <label>Район</label>
 <div class="select-box">
-<input id="districtInput" readonly placeholder="Выберите район">
-<div id="districtOptions" class="options"></div>
+  <input id="districtInput" readonly placeholder="Выберите район">
+  <div id="districtOptions" class="options"></div>
 </div>
 
 <label>ФИО</label>
 <div class="select-box">
-<input id="fioInput" placeholder="Начните ввод ФИО">
-<div id="fioOptions" class="options"></div>
+  <input id="fioInput" placeholder="Начните ввод ФИО">
+  <div id="fioOptions" class="options"></div>
 </div>
 
 <label>Учреждение</label>
 <input id="orgInput" readonly>
 
-<button>Отправить</button>
+<button type="submit">Отправить</button>
 </form>
 
 <div id="result"></div>
 </div>
 
 <script>
-const CSV_URL = "https://raw.githubusercontent.com/USER/REPO/main/data.csv";
-const SCRIPT_URL = "https://script.google.com/macros/s/XXXX/exec";
+const CSV_URL = "https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/data.csv";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
+
+const districtInput = document.getElementById("districtInput");
+const fioInput = document.getElementById("fioInput");
+const orgInput = document.getElementById("orgInput");
+const districtOptions = document.getElementById("districtOptions");
+const fioOptions = document.getElementById("fioOptions");
+const result = document.getElementById("result");
 
 let db = [];
 
 fetch(CSV_URL)
-.then(r=>r.text())
-.then(t=>{
-  const lines = t.trim().split("\n").slice(1);
-  db = lines.map(l=>{
-    const [district,fio,org] = l.split(",");
-    return {district,fio,org};
+  .then(r => r.text())
+  .then(t => {
+    const lines = t.trim().split("\n").slice(1);
+    db = lines.map(l => {
+      const [district, fio, organization] = l.split(",");
+      return { district, fio, organization };
+    });
+    initDistricts();
   });
-  initDistricts();
-});
 
 function initDistricts(){
-  const uniq = [...new Set(db.map(x=>x.district))];
-  renderOptions(districtOptions, uniq, v=>{
-    districtInput.value=v;
-    districtOptions.style.display="none";
-    fioInput.value=""; orgInput.value="";
+  const uniq = [...new Set(db.map(x => x.district))];
+  renderOptions(districtOptions, uniq, v => {
+    districtInput.value = v;
+    districtOptions.style.display = "none";
+    fioInput.value = "";
+    orgInput.value = "";
   });
 }
 
 function renderOptions(box, list, onClick){
-  box.innerHTML="";
-  list.forEach(v=>{
-    const d=document.createElement("div");
-    d.className="option"; d.textContent=v;
-    d.onclick=()=>onClick(v);
+  box.innerHTML = "";
+  list.forEach(v => {
+    const d = document.createElement("div");
+    d.className = "option";
+    d.textContent = v;
+    d.onclick = () => onClick(v);
     box.appendChild(d);
   });
-  box.style.display="block";
+  box.style.display = "block";
 }
 
-districtInput.onclick=()=>{
-  renderOptions(districtOptions,[...new Set(db.map(x=>x.district))],v=>{
-    districtInput.value=v;
-    districtOptions.style.display="none";
+districtInput.onclick = () => {
+  renderOptions(
+    districtOptions,
+    [...new Set(db.map(x => x.district))],
+    v => {
+      districtInput.value = v;
+      districtOptions.style.display = "none";
+    }
+  );
+};
+
+fioInput.oninput = () => {
+  if (!districtInput.value) return;
+
+  const list = db
+    .filter(x => x.district === districtInput.value)
+    .filter(x => x.fio.toLowerCase().includes(fioInput.value.toLowerCase()));
+
+  renderOptions(fioOptions, list.map(x => x.fio), v => {
+    fioInput.value = v;
+    const row = db.find(x => x.fio === v);
+    orgInput.value = row.organization;
+    fioOptions.style.display = "none";
   });
 };
 
-fioInput.oninput=()=>{
-  if(!districtInput.value) return;
-  const list=db
-    .filter(x=>x.district===districtInput.value)
-    .filter(x=>x.fio.toLowerCase().includes(fioInput.value.toLowerCase()));
-  renderOptions(fioOptions,list.map(x=>x.fio),v=>{
-    fioInput.value=v;
-    const row=db.find(x=>x.fio===v);
-    orgInput.value=row.org;
-    fioOptions.style.display="none";
-  });
-};
-
-document.getElementById("form").onsubmit=e=>{
+document.getElementById("form").onsubmit = e => {
   e.preventDefault();
-  const data = districtInput.value+";"+fioInput.value+";"+orgInput.value;
 
-  const fd=new FormData();
-  fd.append("data",data);
+  if (!districtInput.value || !fioInput.value) {
+    result.innerHTML = "<div class='error'>Заполните все поля</div>";
+    return;
+  }
 
-  fetch(SCRIPT_URL,{method:"POST",body:fd})
-  .then(r=>r.text())
-  .then(t=>{
-    result.innerHTML=t==="OK"
-      ?"<div class='success'>Успешно</div>"
-      :"<div class='error'>Ошибка</div>";
-  });
+  const fd = new FormData();
+  fd.append("district", districtInput.value);
+  fd.append("fio", fioInput.value);
+  fd.append("organization", orgInput.value);
+
+  fetch(SCRIPT_URL, { method: "POST", body: fd })
+    .then(r => r.text())
+    .then(t => {
+      result.innerHTML = t === "OK"
+        ? "<div class='success'>✅ Успешно отправлено</div>"
+        : "<div class='error'>❌ Ошибка</div>";
+    });
 };
 </script>
 </body>
