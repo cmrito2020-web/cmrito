@@ -37,27 +37,27 @@ button{background:#1976d2;color:#fff;border:none;border-radius:5px}
 <form id="form">
 
 <!-- РАЙОН -->
-<label>Район *</label>
+<label>Аудан *</label>
 <div class="select">
-  <input id="district" readonly placeholder="Выберите район">
+  <input id="district" readonly placeholder="Аймақты таңдаңыз">
   <div id="districtList" class="list"></div>
 </div>
 
 <!-- ФИО -->
-<label>ФИО *</label>
+<label>Тегі Аты Әкесінің Аты *</label>
 <div class="select">
-  <input id="fio" placeholder="Выберите или введите ФИО">
+  <input id="fio" placeholder="Аты жөнін таңдаңыз немесе енгізіңіз">
   <div id="fioList" class="list"></div>
 </div>
 
 <!-- УЧРЕЖДЕНИЕ -->
-<label>Учреждение *</label>
+<label>Білім беру ұйымы *</label>
 <div class="select">
-  <input id="org" placeholder="Выберите или введите учреждение">
+  <input id="org" placeholder="Мекемені таңдаңыз немесе енгізіңіз">
   <div id="orgList" class="list"></div>
 </div>
 
-<button type="submit">Отправить</button>
+<button type="submit">Жіберу</button>
 </form>
 
 <div id="msg"></div>
@@ -199,7 +199,7 @@ document.getElementById("form").onsubmit=e=>{
   e.preventDefault();
 
   if(!district.value.trim() || !fio.value.trim() || !org.value.trim()){
-    msg.innerHTML="<div class='error'>❗ Заполните все поля</div>";
+    msg.innerHTML="<div class='error'>❗ Барлық өрістерді толтырыңыз</div>";
     return;
   }
 
@@ -212,8 +212,8 @@ document.getElementById("form").onsubmit=e=>{
     .then(r=>r.text())
     .then(t=>{
       msg.innerHTML = t==="OK"
-        ? "<div class='success'>✅ Данные сохранены</div>"
-        : "<div class='error'>❌ Ошибка</div>";
+        ? "<div class='success'>✅ Деректер сақталды</div>"
+        : "<div class='error'>❌ Қате</div>";
     });
 };
 </script>
