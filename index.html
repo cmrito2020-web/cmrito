@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Регистрация</title>
+<title>Регистрация участника</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -43,20 +43,20 @@ button { background:#1976d2; color:#fff; border:none; border-radius:5px }
 
 <form id="form">
 
-<label>Район</label>
+<label>Район *</label>
 <div class="select-box">
-  <input id="districtInput" readonly placeholder="Выберите район">
+  <input id="districtInput" placeholder="Выберите или введите район">
   <div id="districtOptions" class="options"></div>
 </div>
 
-<label>ФИО</label>
+<label>ФИО *</label>
 <div class="select-box">
-  <input id="fioInput" placeholder="Начните ввод ФИО">
+  <input id="fioInput" placeholder="Выберите или введите ФИО">
   <div id="fioOptions" class="options"></div>
 </div>
 
-<label>Учреждение</label>
-<input id="orgInput" readonly>
+<label>Учреждение *</label>
+<input id="orgInput" placeholder="Введите учреждение">
 
 <button type="submit">Отправить</button>
 </form>
@@ -77,35 +77,22 @@ const result = document.getElementById("result");
 
 let db = [];
 
-// Загрузка CSV
+// загрузка CSV
 fetch(CSV_URL)
   .then(r => r.text())
   .then(t => {
     const lines = t.trim().split("\n").slice(1);
-
     db = lines
       .map(l => l.split(","))
-      .filter(arr => arr[1] && arr[1].trim() !== "")
-      .map(arr => ({
-        district: (arr[0] || "").trim(),
-        fio: (arr[1] || "").trim(),
-        organization: (arr[2] || "").trim()
+      .filter(a => a[1])
+      .map(a => ({
+        district: (a[0] || "").trim(),
+        fio: (a[1] || "").trim(),
+        organization: (a[2] || "").trim()
       }));
-
-    initDistricts();
   });
 
-// Районы
-function initDistricts(){
-  const uniq = [...new Set(db.map(x => x.district).filter(x => x))];
-  renderOptions(districtOptions, uniq, v => {
-    districtInput.value = v;
-    districtOptions.style.display = "none";
-    fioInput.value = "";
-    orgInput.value = "";
-  });
-}
-
+// вспомогательная
 function renderOptions(box, list, onClick){
   box.innerHTML = "";
   list.forEach(v => {
@@ -115,52 +102,53 @@ function renderOptions(box, list, onClick){
     d.onclick = () => onClick(v);
     box.appendChild(d);
   });
-  box.style.display = "block";
+  box.style.display = list.length ? "block" : "none";
 }
 
-// выбор района
-districtInput.onclick = () => {
-  renderOptions(
-    districtOptions,
-    [...new Set(db.map(x => x.district).filter(x => x))],
-    v => {
-      districtInput.value = v;
-      districtOptions.style.display = "none";
-    }
-  );
+// районы (подсказка)
+districtInput.oninput = () => {
+  const q = districtInput.value.toLowerCase();
+  const list = [...new Set(db.map(x => x.district).filter(x => x))]
+    .filter(x => x.toLowerCase().includes(q));
+
+  renderOptions(districtOptions, list, v => {
+    districtInput.value = v;
+    districtOptions.style.display = "none";
+  });
 };
 
-// поиск ФИО (работает даже без района)
+// ФИО (подсказка)
 fioInput.oninput = () => {
   const q = fioInput.value.toLowerCase();
-
-  const list = db.filter(x =>
-    x.fio.toLowerCase().includes(q) &&
-    (!districtInput.value || x.district === districtInput.value)
-  );
+  const list = db
+    .filter(x => x.fio.toLowerCase().includes(q));
 
   renderOptions(fioOptions, list.map(x => x.fio), v => {
     fioInput.value = v;
     const row = db.find(x => x.fio === v);
-    orgInput.value = row.organization || "";
-    districtInput.value = row.district || districtInput.value;
+    if (row) {
+      if (!districtInput.value) districtInput.value = row.district;
+      if (!orgInput.value) orgInput.value = row.organization;
+    }
     fioOptions.style.display = "none";
   });
 };
 
-// отправка
+// отправка (СТРОГАЯ ПРОВЕРКА)
 document.getElementById("form").onsubmit = e => {
   e.preventDefault();
 
-  if (!fioInput.value) {
-    result.innerHTML = "<div class='error'>Введите ФИО</div>";
+  if (!districtInput.value.trim() ||
+      !fioInput.value.trim() ||
+      !orgInput.value.trim()) {
+    result.innerHTML = "<div class='error'>❗ Заполните все поля</div>";
     return;
   }
 
   const fd = new FormData();
-  fd.append("district", districtInput.value);
-  fd.append("fio", fioInput.value);
-  fd.append("organization", orgInput.value);
+  fd.append("district", districtInput.value.trim());
+  fd.append("fio", fioInput.value.trim());
+  fd.append("organization", orgInput.value.trim());
 
   fetch(SCRIPT_URL, { method: "POST", body: fd })
     .then(r => r.text())
