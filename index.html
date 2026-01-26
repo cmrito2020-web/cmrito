@@ -140,7 +140,7 @@ fio.oninput=()=>{
   merged.forEach(x=>{
     const d=document.createElement("div");
     d.className="item";
-    d.textContent = x.fio + (x.district ? "" : " (общий)");
+    d.textContent = x.fio + (x.district ? "" : " (спикер)");
     d.onclick=()=>{
       fio.value = x.fio;
       // подставим организацию если есть
