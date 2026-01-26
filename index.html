@@ -36,18 +36,21 @@ button{background:#1976d2;color:#fff;border:none;border-radius:5px}
 
 <form id="form">
 
+<!-- РАЙОН -->
 <label>Район *</label>
 <div class="select">
   <input id="district" readonly placeholder="Выберите район">
   <div id="districtList" class="list"></div>
 </div>
 
+<!-- ФИО -->
 <label>ФИО *</label>
 <div class="select">
   <input id="fio" placeholder="Выберите или введите ФИО">
   <div id="fioList" class="list"></div>
 </div>
 
+<!-- УЧРЕЖДЕНИЕ -->
 <label>Учреждение *</label>
 <div class="select">
   <input id="org" placeholder="Выберите или введите учреждение">
@@ -76,18 +79,20 @@ const msg = document.getElementById("msg");
 let db = [];
 
 // ===== ЗАГРУЗКА CSV =====
-fetch(CSV_URL).then(r=>r.text()).then(t=>{
-  const rows = t.trim().split("\n").slice(1);
-  db = rows
-    .map(r => r.split(","))
-    .filter(c => (c[1] || "").trim() !== "") // ФИО обязательно
-    .map(c => ({
-      district: (c[0] || "").trim(),
-      fio: (c[1] || "").trim(),
-      org: (c[2] || "").trim()
-    }));
-  loadDistricts();
-});
+fetch(CSV_URL)
+  .then(r=>r.text())
+  .then(t=>{
+    const rows = t.trim().split("\n").slice(1);
+    db = rows
+      .map(r=>r.split(","))
+      .filter(c => (c[1]||"").trim() !== "")
+      .map(c=>({
+        district:(c[0]||"").trim(),
+        fio:(c[1]||"").trim(),
+        org:(c[2]||"").trim()
+      }));
+    loadDistricts();
+  });
 
 // ===== РАЙОН =====
 function loadDistricts(){
@@ -108,68 +113,68 @@ function loadDistricts(){
 }
 district.onclick=()=>districtList.style.display="block";
 
-// ===== ФИО (ПО РАЙОНУ + ОБЩИЕ БЕЗ РАЙОНА) =====
-fio.oninput=()=>{
+// ===== ФИО (ПО РАЙОНУ + ОБЩИЕ) =====
+function showFioList(){
   fioList.innerHTML="";
   orgList.style.display="none";
 
   if(!district.value) return;
 
-  const q = fio.value.toLowerCase();
+  const q=fio.value.toLowerCase();
 
-  // 1) ФИО выбранного района
-  const listByDistrict = db.filter(x =>
-    x.district === district.value &&
+  const byDistrict = db.filter(x =>
+    x.district===district.value &&
     x.fio.toLowerCase().includes(q)
   );
 
-  // 2) Общие ФИО без района (district пустой)
-  const listNoDistrict = db.filter(x =>
+  const common = db.filter(x =>
     !x.district &&
     x.fio.toLowerCase().includes(q)
   );
 
-  // Склеиваем + убираем дубликаты по ФИО
-  const mergedMap = new Map();
-  [...listByDistrict, ...listNoDistrict].forEach(x => {
-    if (!mergedMap.has(x.fio)) mergedMap.set(x.fio, x);
+  const map=new Map();
+  [...byDistrict, ...common].forEach(x=>{
+    if(!map.has(x.fio)) map.set(x.fio,x);
   });
 
-  const merged = Array.from(mergedMap.values());
+  const merged=[...map.values()];
 
   merged.forEach(x=>{
     const d=document.createElement("div");
     d.className="item";
-    d.textContent = x.fio + (x.district ? "" : " (спикер)");
+    d.textContent=x.fio + (x.district ? "" : " (общий)");
     d.onclick=()=>{
-      fio.value = x.fio;
-      // подставим организацию если есть
-      if (x.org) org.value = x.org;
+      fio.value=x.fio;
+      if(x.org) org.value=x.org;
       fioList.style.display="none";
     };
     fioList.appendChild(d);
   });
 
   fioList.style.display = merged.length ? "block" : "none";
-};
+}
 
-// ===== УЧРЕЖДЕНИЕ (ПО РАЙОНУ + ОБЩИЕ БЕЗ РАЙОНА) =====
-org.oninput=()=>{
+// 🔧 ВАЖНО: и при вводе, и при клике
+fio.oninput = showFioList;
+fio.onclick = showFioList;
+
+// ===== УЧРЕЖДЕНИЕ (ПО РАЙОНУ + ОБЩИЕ) =====
+function showOrgList(){
   orgList.innerHTML="";
   if(!district.value) return;
 
-  const q = org.value.toLowerCase();
+  const q=org.value.toLowerCase();
 
-  const orgsByDistrict = db
-    .filter(x => x.district === district.value && x.org)
-    .map(x => x.org);
+  const byDistrict=db
+    .filter(x=>x.district===district.value && x.org)
+    .map(x=>x.org);
 
-  const orgsNoDistrict = db
-    .filter(x => !x.district && x.org)
-    .map(x => x.org);
+  const common=db
+    .filter(x=>!x.district && x.org)
+    .map(x=>x.org);
 
-  const uniq = [...new Set([...orgsByDistrict, ...orgsNoDistrict])]
-    .filter(v => v.toLowerCase().includes(q))
+  const uniq=[...new Set([...byDistrict,...common])]
+    .filter(v=>v.toLowerCase().includes(q))
     .sort();
 
   uniq.forEach(v=>{
@@ -184,7 +189,10 @@ org.oninput=()=>{
   });
 
   orgList.style.display = uniq.length ? "block" : "none";
-};
+}
+
+org.oninput = showOrgList;
+org.onclick = showOrgList;
 
 // ===== ОТПРАВКА =====
 document.getElementById("form").onsubmit=e=>{
@@ -204,8 +212,8 @@ document.getElementById("form").onsubmit=e=>{
     .then(r=>r.text())
     .then(t=>{
       msg.innerHTML = t==="OK"
-        ?"<div class='success'>✅ Данные сохранены</div>"
-        :"<div class='error'>❌ Ошибка</div>";
+        ? "<div class='success'>✅ Данные сохранены</div>"
+        : "<div class='error'>❌ Ошибка</div>";
     });
 };
 </script>
