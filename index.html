@@ -2,66 +2,20 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Қатысушыларды тіркеу / Регистрация участников</title>
+<title>Қатысушыларды тіркеу</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f6f8;
-  padding: 20px;
-}
-.container {
-  max-width: 420px;
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  margin: auto;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-}
-.logo { text-align:center; margin-bottom:15px; }
-.logo img { max-width:160px; }
-h2 { text-align:center; margin-bottom:20px; }
+body { font-family: Arial; background:#f4f6f8; padding:20px; }
+.container { max-width:420px; background:#fff; padding:20px; border-radius:10px; margin:auto; }
 label { font-weight:bold; margin-top:10px; display:block; }
+input, button { width:100%; padding:10px; margin-top:5px; }
+button { background:#1976d2; color:#fff; border:none; border-radius:5px; margin-top:15px; cursor:pointer; }
 
-input, button {
-  width:100%;
-  padding:10px;
-  margin-top:5px;
-  font-size:16px;
-}
-
-button {
-  background:#1976d2;
-  color:#fff;
-  border:none;
-  border-radius:5px;
-  margin-top:15px;
-  cursor:pointer;
-}
-
-/* SEARCH SELECT */
 .select-box { position:relative; }
-.select-input { cursor:pointer; background:#fff; }
-.options {
-  position:absolute;
-  width:100%;
-  max-height:200px;
-  overflow-y:auto;
-  border:1px solid #ccc;
-  background:#fff;
-  border-radius:5px;
-  display:none;
-  z-index:10;
-}
-.option {
-  padding:10px;
-  cursor:pointer;
-}
-.option:hover {
-  background:#1976d2;
-  color:#fff;
-}
+.options { position:absolute; width:100%; max-height:200px; overflow:auto; background:#fff; border:1px solid #ccc; display:none; z-index:10; }
+.option { padding:10px; cursor:pointer; }
+.option:hover { background:#1976d2; color:#fff; }
 
 .success { color:green; text-align:center; margin-top:10px; }
 .error { color:red; text-align:center; margin-top:10px; }
@@ -71,109 +25,104 @@ button {
 <body>
 
 <div class="container">
-
-<div class="logo">
-  <img src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png">
-</div>
-
-<h2>Қатысушыны тіркеу<br>Регистрация участника</h2>
+<h2>Қатысушыны тіркеу</h2>
 
 <form id="regForm">
 
 <label>Аудан / Район</label>
 <div class="select-box">
-  <input id="districtInput" class="select-input" readonly
-    placeholder="Ауданды таңдаңыз / Выберите район">
+  <input type="text" id="districtInput" readonly placeholder="Районды таңдаңыз">
   <div class="options" id="districtOptions"></div>
 </div>
 <input type="hidden" name="district" id="districtHidden" required>
 
 <label>ТАӘ / ФИО</label>
 <div class="select-box">
-  <input id="fioInput" class="select-input"
-    placeholder="ТАӘ таңдаңыз / Выберите ФИО">
+  <input type="text" id="fioInput" placeholder="ФИО таңдаңыз">
   <div class="options" id="fioOptions"></div>
 </div>
 <input type="hidden" name="fio" id="fioHidden" required>
 
 <label>Мекеме / Учреждение</label>
-<input type="text" name="organization" readonly required>
+<input type="text" name="organization" id="orgInput" readonly>
 
-<button type="submit">Жіберу / Отправить</button>
+<button type="submit">Жіберу</button>
 </form>
 
 <div id="result"></div>
 </div>
 
 <script>
+// ====== НАСТРОЙКИ ======
+const CSV_URL = "https://raw.githubusercontent.com/cmrito2020-web/cmrito/refs/heads/main/data.csv";
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
 
-let dataMap = {};
+let data = [];
 
-fetch(SCRIPT_URL)
-  .then(r => r.json())
-  .then(data => {
-    dataMap = data;
-    renderOptions(districtOptions, Object.keys(dataMap), districtInput, districtHidden);
+// ====== ЗАГРУЗКА CSV ======
+fetch(CSV_URL)
+  .then(r => r.text())
+  .then(text => {
+    const rows = text.split("\n").slice(1);
+    data = rows.map(r => {
+      const [district,fio,organization] = r.split(",");
+      return { district, fio, organization };
+    });
+    initDistricts();
   });
 
-function renderOptions(box, list, input, hidden) {
+// ====== РАЙОН ======
+function initDistricts() {
+  const districts = [...new Set(data.map(d => d.district))];
+  renderOptions(districts, districtOptions, val => {
+    districtInput.value = val;
+    districtHidden.value = val;
+    fioInput.value = fioHidden.value = orgInput.value = "";
+    initFio(val);
+  });
+}
+
+// ====== ФИО ======
+function initFio(district) {
+  const fios = data.filter(d => d.district === district);
+  fioInput.oninput = () => {
+    const f = fioInput.value.toLowerCase();
+    renderOptions(
+      fios.filter(x => x.fio.toLowerCase().includes(f)).map(x => x.fio),
+      fioOptions,
+      val => {
+        fioInput.value = val;
+        fioHidden.value = val;
+        orgInput.value = fios.find(x => x.fio === val).organization;
+      }
+    );
+    fioOptions.style.display = "block";
+  };
+}
+
+// ====== ВСПОМОГАТЕЛЬНАЯ ======
+function renderOptions(list, box, onSelect) {
   box.innerHTML = "";
   list.forEach(v => {
     const d = document.createElement("div");
     d.className = "option";
     d.textContent = v;
-    d.onclick = () => {
-      input.value = v;
-      hidden.value = v;
-      box.style.display = "none";
-
-      if (input.id === "districtInput") {
-        fioInput.value = "";
-        fioHidden.value = "";
-        document.querySelector("[name='organization']").value = "";
-        renderOptions(
-          fioOptions,
-          dataMap[v].map(x => x.fio),
-          fioInput,
-          fioHidden
-        );
-      }
-
-      if (input.id === "fioInput") {
-        const found = dataMap[districtHidden.value]
-          .find(x => x.fio === v);
-        if (found) {
-          document.querySelector("[name='organization']").value = found.organization;
-        }
-      }
-    };
+    d.onclick = () => { onSelect(v); box.style.display="none"; };
     box.appendChild(d);
   });
+  box.style.display = "block";
 }
 
-document.addEventListener("click", e => {
-  if (!e.target.closest(".select-box")) {
-    document.querySelectorAll(".options").forEach(o => o.style.display="none");
-  }
-});
-
-document.querySelectorAll(".select-input").forEach(inp => {
-  inp.addEventListener("click", () => {
-    inp.nextElementSibling.style.display = "block";
-  });
-});
-
+// ====== SUBMIT ======
 document.getElementById("regForm").addEventListener("submit", e => {
   e.preventDefault();
-  fetch(SCRIPT_URL, { method:"POST", body:new FormData(regForm) })
+  fetch(SCRIPT_URL, { method:"POST", body:new FormData(e.target) })
     .then(r=>r.text())
     .then(t=>{
-      result.innerHTML = t.trim()==="OK"
-        ? "<div class='success'>✅ Сәтті жіберілді / Успешно отправлено</div>"
-        : "<div class='error'>❌ Қате / Ошибка</div>";
-      regForm.reset();
-      districtInput.value = fioInput.value = "";
+      result.innerHTML = t.trim()=="OK"
+        ? "<div class='success'>✅ Жіберілді</div>"
+        : "<div class='error'>❌ Қате</div>";
+      e.target.reset();
     });
 });
 </script>
