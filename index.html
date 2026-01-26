@@ -6,29 +6,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body { font-family: Arial; background:#f4f6f8; padding:20px }
-.container {
-  max-width:420px; background:#fff; padding:20px;
-  border-radius:10px; margin:auto;
-  box-shadow:0 4px 10px rgba(0,0,0,.1)
+body{font-family:Arial;background:#f4f6f8;padding:20px}
+.container{
+  max-width:420px;background:#fff;padding:20px;margin:auto;
+  border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.1)
 }
-.logo img { max-width:160px; display:block; margin:auto }
-label { font-weight:bold; margin-top:12px; display:block }
-input,button { width:100%; padding:10px; margin-top:5px; font-size:16px }
-button { background:#1976d2; color:#fff; border:none; border-radius:5px }
-.select-box { position:relative }
-.options {
-  border:1px solid #ccc;
-  max-height:200px;
-  overflow:auto;
-  display:none;
-  position:absolute;
-  background:#fff;
-  width:100%;
-  z-index:10
+.logo img{max-width:160px;display:block;margin:auto}
+label{font-weight:bold;margin-top:12px;display:block}
+input,button{width:100%;padding:10px;margin-top:5px;font-size:16px}
+button{background:#1976d2;color:#fff;border:none;border-radius:5px}
+.select{position:relative}
+.list{
+  position:absolute;width:100%;background:#fff;border:1px solid #ccc;
+  max-height:180px;overflow:auto;display:none;z-index:10
 }
-.option { padding:8px; cursor:pointer }
-.option:hover { background:#1976d2; color:#fff }
+.item{padding:8px;cursor:pointer}
+.item:hover{background:#1976d2;color:#fff}
 .success{color:green;text-align:center;margin-top:10px}
 .error{color:red;text-align:center;margin-top:10px}
 </style>
@@ -43,119 +36,132 @@ button { background:#1976d2; color:#fff; border:none; border-radius:5px }
 
 <form id="form">
 
+<!-- РАЙОН -->
 <label>Район *</label>
-<div class="select-box">
-  <input id="districtInput" placeholder="Выберите или введите район">
-  <div id="districtOptions" class="options"></div>
+<div class="select">
+  <input id="district" placeholder="Выберите район" readonly>
+  <div id="districtList" class="list"></div>
 </div>
 
+<!-- ФИО -->
 <label>ФИО *</label>
-<div class="select-box">
-  <input id="fioInput" placeholder="Выберите или введите ФИО">
-  <div id="fioOptions" class="options"></div>
+<div class="select">
+  <input id="fio" placeholder="Выберите или введите ФИО">
+  <div id="fioList" class="list"></div>
 </div>
 
+<!-- УЧРЕЖДЕНИЕ -->
 <label>Учреждение *</label>
-<input id="orgInput" placeholder="Введите учреждение">
+<div class="select">
+  <input id="org" placeholder="Выберите или введите учреждение">
+  <div id="orgList" class="list"></div>
+</div>
 
 <button type="submit">Отправить</button>
 </form>
 
-<div id="result"></div>
+<div id="msg"></div>
 </div>
 
 <script>
 const CSV_URL = "https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/data.csv";
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
 
-const districtInput = document.getElementById("districtInput");
-const fioInput = document.getElementById("fioInput");
-const orgInput = document.getElementById("orgInput");
-const districtOptions = document.getElementById("districtOptions");
-const fioOptions = document.getElementById("fioOptions");
-const result = document.getElementById("result");
+const district = document.getElementById("district");
+const fio = document.getElementById("fio");
+const org = document.getElementById("org");
 
-let db = [];
+const districtList = document.getElementById("districtList");
+const fioList = document.getElementById("fioList");
+const orgList = document.getElementById("orgList");
+const msg = document.getElementById("msg");
+
+let data = [];
 
 // загрузка CSV
-fetch(CSV_URL)
-  .then(r => r.text())
-  .then(t => {
-    const lines = t.trim().split("\n").slice(1);
-    db = lines
-      .map(l => l.split(","))
-      .filter(a => a[1])
-      .map(a => ({
-        district: (a[0] || "").trim(),
-        fio: (a[1] || "").trim(),
-        organization: (a[2] || "").trim()
-      }));
+fetch(CSV_URL).then(r=>r.text()).then(t=>{
+  const rows = t.trim().split("\n").slice(1);
+  data = rows.map(r=>{
+    const c = r.split(",");
+    return {
+      district:(c[0]||"").trim(),
+      fio:(c[1]||"").trim(),
+      org:(c[2]||"").trim()
+    };
   });
+  loadDistricts();
+});
 
-// вспомогательная
-function renderOptions(box, list, onClick){
-  box.innerHTML = "";
-  list.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "option";
-    d.textContent = v;
-    d.onclick = () => onClick(v);
-    box.appendChild(d);
+// ===== РАЙОН (ТОЛЬКО ВЫБОР) =====
+function loadDistricts(){
+  const list=[...new Set(data.map(x=>x.district).filter(x=>x))];
+  districtList.innerHTML="";
+  list.forEach(v=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.textContent=v;
+    d.onclick=()=>{district.value=v;districtList.style.display="none";}
+    districtList.appendChild(d);
   });
-  box.style.display = list.length ? "block" : "none";
 }
 
-// районы (подсказка)
-districtInput.oninput = () => {
-  const q = districtInput.value.toLowerCase();
-  const list = [...new Set(db.map(x => x.district).filter(x => x))]
-    .filter(x => x.toLowerCase().includes(q));
+district.onclick=()=>districtList.style.display="block";
 
-  renderOptions(districtOptions, list, v => {
-    districtInput.value = v;
-    districtOptions.style.display = "none";
+// ===== ФИО (выбор + ручной ввод) =====
+fio.oninput=()=>{
+  const q=fio.value.toLowerCase();
+  const list=data.filter(x=>x.fio && x.fio.toLowerCase().includes(q));
+  fioList.innerHTML="";
+  list.forEach(x=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.textContent=x.fio;
+    d.onclick=()=>{
+      fio.value=x.fio;
+      if(!org.value) org.value=x.org;
+      fioList.style.display="none";
+    };
+    fioList.appendChild(d);
   });
+  fioList.style.display=list.length?"block":"none";
 };
 
-// ФИО (подсказка)
-fioInput.oninput = () => {
-  const q = fioInput.value.toLowerCase();
-  const list = db
-    .filter(x => x.fio.toLowerCase().includes(q));
-
-  renderOptions(fioOptions, list.map(x => x.fio), v => {
-    fioInput.value = v;
-    const row = db.find(x => x.fio === v);
-    if (row) {
-      if (!districtInput.value) districtInput.value = row.district;
-      if (!orgInput.value) orgInput.value = row.organization;
-    }
-    fioOptions.style.display = "none";
+// ===== УЧРЕЖДЕНИЕ (выбор + ручной ввод) =====
+org.oninput=()=>{
+  const q=org.value.toLowerCase();
+  const list=[...new Set(data.map(x=>x.org).filter(x=>x))]
+    .filter(x=>x.toLowerCase().includes(q));
+  orgList.innerHTML="";
+  list.forEach(v=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.textContent=v;
+    d.onclick=()=>{org.value=v;orgList.style.display="none";}
+    orgList.appendChild(d);
   });
+  orgList.style.display=list.length?"block":"none";
 };
 
-// отправка (СТРОГАЯ ПРОВЕРКА)
-document.getElementById("form").onsubmit = e => {
+// ===== ОТПРАВКА =====
+document.getElementById("form").onsubmit=e=>{
   e.preventDefault();
 
-  if (!districtInput.value.trim() ||
-      !fioInput.value.trim() ||
-      !orgInput.value.trim()) {
-    result.innerHTML = "<div class='error'>❗ Заполните все поля</div>";
+  if(!district.value||!fio.value||!org.value){
+    msg.innerHTML="<div class='error'>❗ Заполните все поля</div>";
     return;
   }
 
-  const fd = new FormData();
-  fd.append("district", districtInput.value.trim());
-  fd.append("fio", fioInput.value.trim());
-  fd.append("organization", orgInput.value.trim());
+  const fd=new FormData();
+  fd.append("district",district.value);
+  fd.append("fio",fio.value);
+  fd.append("organization",org.value);
 
-  fetch(SCRIPT_URL, { method: "POST", body: fd })
-    .then(r => r.text())
-    .then(t => {
-      result.innerHTML = t === "OK"
-        ? "<div class='success'>✅ Успешно отправлено</div>"
-        : "<div class='error'>❌ Ошибка</div>";
+  fetch(SCRIPT_URL,{method:"POST",body:fd})
+    .then(r=>r.text())
+    .then(t=>{
+      msg.innerHTML=t==="OK"
+        ?"<div class='success'>✅ Данные сохранены</div>"
+        :"<div class='error'>❌ Ошибка</div>";
     });
 };
 </script>
