@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Қатысушыларды тіркеу/Регистрация участников</title>
+<title>Қатысушыларды тіркеу / Регистрация участников</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -19,66 +19,52 @@ body {
   margin: auto;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
-.logo {
-  text-align: center;
-  margin-bottom: 15px;
-}
-.logo img {
-  max-width: 160px;
-}
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
-label {
-  font-weight: bold;
-  margin-top: 10px;
-  display: block;
-}
+.logo { text-align:center; margin-bottom:15px; }
+.logo img { max-width:160px; }
+h2 { text-align:center; margin-bottom:20px; }
+label { font-weight:bold; margin-top:10px; display:block; }
+
 input, button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
-  font-size: 16px;
-}
-button {
-  background: #1976d2;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  margin-top: 15px;
-  cursor: pointer;
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  font-size:16px;
 }
 
-/* === SEARCH SELECT === */
-.select-box {
-  position: relative;
+button {
+  background:#1976d2;
+  color:#fff;
+  border:none;
+  border-radius:5px;
+  margin-top:15px;
+  cursor:pointer;
 }
-.select-input {
-  cursor: pointer;
-}
+
+/* SEARCH SELECT */
+.select-box { position:relative; }
+.select-input { cursor:pointer; background:#fff; }
 .options {
-  position: absolute;
-  width: 100%;
-  max-height: 200px;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  background: #fff;
-  border-radius: 5px;
-  display: none;
-  z-index: 10;
+  position:absolute;
+  width:100%;
+  max-height:200px;
+  overflow-y:auto;
+  border:1px solid #ccc;
+  background:#fff;
+  border-radius:5px;
+  display:none;
+  z-index:10;
 }
 .option {
-  padding: 10px;
-  cursor: pointer;
+  padding:10px;
+  cursor:pointer;
 }
 .option:hover {
-  background: #1976d2;
-  color: #fff;
+  background:#1976d2;
+  color:#fff;
 }
 
-.success { color: green; text-align: center; margin-top: 10px; }
-.error { color: red; text-align: center; margin-top: 10px; }
+.success { color:green; text-align:center; margin-top:10px; }
+.error { color:red; text-align:center; margin-top:10px; }
 </style>
 </head>
 
@@ -86,133 +72,109 @@ button {
 
 <div class="container">
 
-  <div class="logo">
-    <img src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png">
-  </div>
+<div class="logo">
+  <img src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png">
+</div>
 
-  <h2>Қатысушыны тіркеу/Регистрация участника</h2>
+<h2>Қатысушыны тіркеу<br>Регистрация участника</h2>
 
-  <form id="regForm">
+<form id="regForm">
 
-    <!-- РАЙОН -->
-    <label>Аудан/Район</label>
-    <div class="select-box">
-      <input type="text" class="select-input" id="districtInput" placeholder="Ауданды таңдаңыз/Выберите район" readonly>
-      <div class="options" id="districtOptions"></div>
-    </div>
-    <input type="hidden" name="district" id="districtHidden" required>
+<label>Аудан / Район</label>
+<div class="select-box">
+  <input id="districtInput" class="select-input" readonly
+    placeholder="Ауданды таңдаңыз / Выберите район">
+  <div class="options" id="districtOptions"></div>
+</div>
+<input type="hidden" name="district" id="districtHidden" required>
 
-    <!-- УЧРЕЖДЕНИЕ -->
-    <label>Мекеменің атауы / Название учреждения</label>
-    <input type="text" name="organization" required>
+<label>ТАӘ / ФИО</label>
+<div class="select-box">
+  <input id="fioInput" class="select-input"
+    placeholder="ТАӘ таңдаңыз / Выберите ФИО">
+  <div class="options" id="fioOptions"></div>
+</div>
+<input type="hidden" name="fio" id="fioHidden" required>
 
-    <!-- ФИО -->
-    <label>ТАӘ/ФИО</label>
-    <div class="select-box">
-      <input type="text" class="select-input" id="fioInput" placeholder="ТАӘ-ні таңдаңыз/Выберите ФИО">
-      <div class="options" id="fioOptions"></div>
-    </div>
-    <input type="hidden" name="fio" id="fioHidden" required>
+<label>Мекеме / Учреждение</label>
+<input type="text" name="organization" readonly required>
 
-    <button type="submit">Жіберу/Отправить</button>
-  </form>
+<button type="submit">Жіберу / Отправить</button>
+</form>
 
-  <div id="result"></div>
+<div id="result"></div>
 </div>
 
 <script>
-/* ===== ДАННЫЕ ===== */
-const districts = [
-  "Айыртау ауданы","Ақжар ауданы","Аққайың ауданы","Мағжан Жұмабаев ауданы",
-  "Есiл ауданы","Жамбыл ауданы","Қызылжар ауданы","Мамлют ауданы",
-  "Ғабит Мүсірепов ауданы","Тайынша ауданы","Тимирязев ауданы",
-  "Уәлиханов ауданы","Шал ақын ауданы","Петропавл қаласы"
-];
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
 
-const fios = [
-  "Иванов Иван Иванович",
-  "Петров Петр Петрович",
-  "Сидорова Анна Сергеевна",
-  "Ахметов Нурлан Ерланович",
-  "Сарсенова Гульдана Муратовна",
-  "Калиев Саят Ерланович"
-];
+let dataMap = {};
 
-/* ===== ФУНКЦИЯ SELECT С ПОИСКОМ ===== */
-function initSearchSelect(input, optionsBox, hidden, data, readonly=false) {
-  function render(filter="") {
-    optionsBox.innerHTML = "";
-    data.filter(v => v.toLowerCase().includes(filter.toLowerCase()))
-        .forEach(v => {
-          const div = document.createElement("div");
-          div.className = "option";
-          div.textContent = v;
-          div.onclick = () => {
-            input.value = v;
-            hidden.value = v;
-            optionsBox.style.display = "none";
-          };
-          optionsBox.appendChild(div);
-        });
-  }
-
-  input.addEventListener("click", () => {
-    optionsBox.style.display = "block";
-    render();
+fetch(SCRIPT_URL)
+  .then(r => r.json())
+  .then(data => {
+    dataMap = data;
+    renderOptions(districtOptions, Object.keys(dataMap), districtInput, districtHidden);
   });
 
-  if (!readonly) {
-    input.addEventListener("input", () => {
-      optionsBox.style.display = "block";
-      render(input.value);
-    });
-  }
+function renderOptions(box, list, input, hidden) {
+  box.innerHTML = "";
+  list.forEach(v => {
+    const d = document.createElement("div");
+    d.className = "option";
+    d.textContent = v;
+    d.onclick = () => {
+      input.value = v;
+      hidden.value = v;
+      box.style.display = "none";
 
-  document.addEventListener("click", e => {
-    if (!e.target.closest(".select-box")) {
-      optionsBox.style.display = "none";
-    }
+      if (input.id === "districtInput") {
+        fioInput.value = "";
+        fioHidden.value = "";
+        document.querySelector("[name='organization']").value = "";
+        renderOptions(
+          fioOptions,
+          dataMap[v].map(x => x.fio),
+          fioInput,
+          fioHidden
+        );
+      }
+
+      if (input.id === "fioInput") {
+        const found = dataMap[districtHidden.value]
+          .find(x => x.fio === v);
+        if (found) {
+          document.querySelector("[name='organization']").value = found.organization;
+        }
+      }
+    };
+    box.appendChild(d);
   });
 }
 
-/* ===== ИНИЦИАЛИЗАЦИЯ ===== */
-initSearchSelect(
-  document.getElementById("districtInput"),
-  document.getElementById("districtOptions"),
-  document.getElementById("districtHidden"),
-  districts,
-  true
-);
-
-initSearchSelect(
-  document.getElementById("fioInput"),
-  document.getElementById("fioOptions"),
-  document.getElementById("fioHidden"),
-  fios
-);
-
-/* ===== ОТПРАВКА ===== */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
-
-document.getElementById("regForm").addEventListener("submit", function(e) {
-  e.preventDefault();
-
-  if (!districtHidden.value || !fioHidden.value) {
-    alert("Ауданды және ТАӘ-ні тізімнен таңдаңыз/Выберите район и ФИО из списка");
-    return;
+document.addEventListener("click", e => {
+  if (!e.target.closest(".select-box")) {
+    document.querySelectorAll(".options").forEach(o => o.style.display="none");
   }
+});
 
-  fetch(SCRIPT_URL, { method: "POST", body: new FormData(this) })
-    .then(r => r.text())
-    .then(t => {
-      document.getElementById("result").innerHTML =
-        t.trim()==="OK"
-        ? "<div class='success'>✅ Сәтті жіберілді/Успешно отправлено</div>"
-        : "<div class='error'>❌ Қате/Ошибка: "+t+"</div>";
-      this.reset();
+document.querySelectorAll(".select-input").forEach(inp => {
+  inp.addEventListener("click", () => {
+    inp.nextElementSibling.style.display = "block";
+  });
+});
+
+document.getElementById("regForm").addEventListener("submit", e => {
+  e.preventDefault();
+  fetch(SCRIPT_URL, { method:"POST", body:new FormData(regForm) })
+    .then(r=>r.text())
+    .then(t=>{
+      result.innerHTML = t.trim()==="OK"
+        ? "<div class='success'>✅ Сәтті жіберілді / Успешно отправлено</div>"
+        : "<div class='error'>❌ Қате / Ошибка</div>";
+      regForm.reset();
       districtInput.value = fioInput.value = "";
-    })
-    .catch(()=>result.innerHTML="<div class='error'>Қосылу қате/Ошибка соединения</div>");
+    });
 });
 </script>
 
