@@ -225,9 +225,14 @@ document.getElementById("form").onsubmit=e=>{
   fetch(SCRIPT_URL,{method:"POST",body:fd})
     .then(r=>r.text())
     .then(t=>{
-      msg.innerHTML = t==="OK"
-        ? "<div class='success'>✅ Деректер сақталды</div>"
-        : "<div class='error'>❌ Қате</div>";
+      if(t === "OK"){
+        // переход через 0.5 сек
+        setTimeout(()=>{
+          window.location.href = "thanks.html";
+        }, 500);
+      } else {
+        msg.innerHTML = "<div class='error'>❌ Қате</div>";
+      }
     });
 };
 </script>
