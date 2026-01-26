@@ -39,7 +39,7 @@ button{background:#1976d2;color:#fff;border:none;border-radius:5px}
 <!-- РАЙОН -->
 <label>Район *</label>
 <div class="select">
-  <input id="district" placeholder="Выберите район" readonly>
+  <input id="district" readonly placeholder="Выберите район">
   <div id="districtList" class="list"></div>
 </div>
 
@@ -76,12 +76,12 @@ const fioList = document.getElementById("fioList");
 const orgList = document.getElementById("orgList");
 const msg = document.getElementById("msg");
 
-let data = [];
+let db = [];
 
-// загрузка CSV
+// ===== ЗАГРУЗКА CSV =====
 fetch(CSV_URL).then(r=>r.text()).then(t=>{
   const rows = t.trim().split("\n").slice(1);
-  data = rows.map(r=>{
+  db = rows.map(r=>{
     const c = r.split(",");
     return {
       district:(c[0]||"").trim(),
@@ -92,53 +92,79 @@ fetch(CSV_URL).then(r=>r.text()).then(t=>{
   loadDistricts();
 });
 
-// ===== РАЙОН (ТОЛЬКО ВЫБОР) =====
+// ===== РАЙОН =====
 function loadDistricts(){
-  const list=[...new Set(data.map(x=>x.district).filter(x=>x))];
+  const list=[...new Set(db.map(x=>x.district).filter(x=>x))];
   districtList.innerHTML="";
   list.forEach(v=>{
     const d=document.createElement("div");
     d.className="item";
     d.textContent=v;
-    d.onclick=()=>{district.value=v;districtList.style.display="none";}
+    d.onclick=()=>{
+      district.value=v;
+      districtList.style.display="none";
+      fio.value="";
+      org.value="";
+    };
     districtList.appendChild(d);
   });
 }
 
 district.onclick=()=>districtList.style.display="block";
 
-// ===== ФИО (выбор + ручной ввод) =====
+// ===== ФИО (ПО РАЙОНУ) =====
 fio.oninput=()=>{
-  const q=fio.value.toLowerCase();
-  const list=data.filter(x=>x.fio && x.fio.toLowerCase().includes(q));
   fioList.innerHTML="";
+  orgList.style.display="none";
+
+  if(!district.value) return;
+
+  const q=fio.value.toLowerCase();
+  const list=db.filter(x=>
+    x.district===district.value &&
+    x.fio &&
+    x.fio.toLowerCase().includes(q)
+  );
+
   list.forEach(x=>{
     const d=document.createElement("div");
     d.className="item";
     d.textContent=x.fio;
     d.onclick=()=>{
       fio.value=x.fio;
-      if(!org.value) org.value=x.org;
+      org.value=x.org || "";
       fioList.style.display="none";
     };
     fioList.appendChild(d);
   });
+
   fioList.style.display=list.length?"block":"none";
 };
 
-// ===== УЧРЕЖДЕНИЕ (выбор + ручной ввод) =====
+// ===== УЧРЕЖДЕНИЕ (ПО ФИО + РАЙОНУ) =====
 org.oninput=()=>{
-  const q=org.value.toLowerCase();
-  const list=[...new Set(data.map(x=>x.org).filter(x=>x))]
-    .filter(x=>x.toLowerCase().includes(q));
   orgList.innerHTML="";
+  if(!district.value) return;
+
+  const q=org.value.toLowerCase();
+
+  const list=[...new Set(
+    db.filter(x=>x.district===district.value)
+      .map(x=>x.org)
+      .filter(x=>x)
+  )].filter(x=>x.toLowerCase().includes(q));
+
   list.forEach(v=>{
     const d=document.createElement("div");
     d.className="item";
     d.textContent=v;
-    d.onclick=()=>{org.value=v;orgList.style.display="none";}
+    d.onclick=()=>{
+      org.value=v;
+      orgList.style.display="none";
+    };
     orgList.appendChild(d);
   });
+
   orgList.style.display=list.length?"block":"none";
 };
 
