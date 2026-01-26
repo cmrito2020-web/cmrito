@@ -36,21 +36,18 @@ button{background:#1976d2;color:#fff;border:none;border-radius:5px}
 
 <form id="form">
 
-<!-- РАЙОН -->
 <label>Район *</label>
 <div class="select">
   <input id="district" readonly placeholder="Выберите район">
   <div id="districtList" class="list"></div>
 </div>
 
-<!-- ФИО -->
 <label>ФИО *</label>
 <div class="select">
   <input id="fio" placeholder="Выберите или введите ФИО">
   <div id="fioList" class="list"></div>
 </div>
 
-<!-- УЧРЕЖДЕНИЕ -->
 <label>Учреждение *</label>
 <div class="select">
   <input id="org" placeholder="Выберите или введите учреждение">
@@ -81,20 +78,20 @@ let db = [];
 // ===== ЗАГРУЗКА CSV =====
 fetch(CSV_URL).then(r=>r.text()).then(t=>{
   const rows = t.trim().split("\n").slice(1);
-  db = rows.map(r=>{
-    const c = r.split(",");
-    return {
-      district:(c[0]||"").trim(),
-      fio:(c[1]||"").trim(),
-      org:(c[2]||"").trim()
-    };
-  });
+  db = rows
+    .map(r => r.split(","))
+    .filter(c => (c[1] || "").trim() !== "") // ФИО обязательно
+    .map(c => ({
+      district: (c[0] || "").trim(),
+      fio: (c[1] || "").trim(),
+      org: (c[2] || "").trim()
+    }));
   loadDistricts();
 });
 
 // ===== РАЙОН =====
 function loadDistricts(){
-  const list=[...new Set(db.map(x=>x.district).filter(x=>x))];
+  const list=[...new Set(db.map(x=>x.district).filter(x=>x))].sort();
   districtList.innerHTML="";
   list.forEach(v=>{
     const d=document.createElement("div");
@@ -109,52 +106,73 @@ function loadDistricts(){
     districtList.appendChild(d);
   });
 }
-
 district.onclick=()=>districtList.style.display="block";
 
-// ===== ФИО (ПО РАЙОНУ) =====
+// ===== ФИО (ПО РАЙОНУ + ОБЩИЕ БЕЗ РАЙОНА) =====
 fio.oninput=()=>{
   fioList.innerHTML="";
   orgList.style.display="none";
 
   if(!district.value) return;
 
-  const q=fio.value.toLowerCase();
-  const list=db.filter(x=>
-    x.district===district.value &&
-    x.fio &&
+  const q = fio.value.toLowerCase();
+
+  // 1) ФИО выбранного района
+  const listByDistrict = db.filter(x =>
+    x.district === district.value &&
     x.fio.toLowerCase().includes(q)
   );
 
-  list.forEach(x=>{
+  // 2) Общие ФИО без района (district пустой)
+  const listNoDistrict = db.filter(x =>
+    !x.district &&
+    x.fio.toLowerCase().includes(q)
+  );
+
+  // Склеиваем + убираем дубликаты по ФИО
+  const mergedMap = new Map();
+  [...listByDistrict, ...listNoDistrict].forEach(x => {
+    if (!mergedMap.has(x.fio)) mergedMap.set(x.fio, x);
+  });
+
+  const merged = Array.from(mergedMap.values());
+
+  merged.forEach(x=>{
     const d=document.createElement("div");
     d.className="item";
-    d.textContent=x.fio;
+    d.textContent = x.fio + (x.district ? "" : " (общий)");
     d.onclick=()=>{
-      fio.value=x.fio;
-      org.value=x.org || "";
+      fio.value = x.fio;
+      // подставим организацию если есть
+      if (x.org) org.value = x.org;
       fioList.style.display="none";
     };
     fioList.appendChild(d);
   });
 
-  fioList.style.display=list.length?"block":"none";
+  fioList.style.display = merged.length ? "block" : "none";
 };
 
-// ===== УЧРЕЖДЕНИЕ (ПО ФИО + РАЙОНУ) =====
+// ===== УЧРЕЖДЕНИЕ (ПО РАЙОНУ + ОБЩИЕ БЕЗ РАЙОНА) =====
 org.oninput=()=>{
   orgList.innerHTML="";
   if(!district.value) return;
 
-  const q=org.value.toLowerCase();
+  const q = org.value.toLowerCase();
 
-  const list=[...new Set(
-    db.filter(x=>x.district===district.value)
-      .map(x=>x.org)
-      .filter(x=>x)
-  )].filter(x=>x.toLowerCase().includes(q));
+  const orgsByDistrict = db
+    .filter(x => x.district === district.value && x.org)
+    .map(x => x.org);
 
-  list.forEach(v=>{
+  const orgsNoDistrict = db
+    .filter(x => !x.district && x.org)
+    .map(x => x.org);
+
+  const uniq = [...new Set([...orgsByDistrict, ...orgsNoDistrict])]
+    .filter(v => v.toLowerCase().includes(q))
+    .sort();
+
+  uniq.forEach(v=>{
     const d=document.createElement("div");
     d.className="item";
     d.textContent=v;
@@ -165,27 +183,27 @@ org.oninput=()=>{
     orgList.appendChild(d);
   });
 
-  orgList.style.display=list.length?"block":"none";
+  orgList.style.display = uniq.length ? "block" : "none";
 };
 
 // ===== ОТПРАВКА =====
 document.getElementById("form").onsubmit=e=>{
   e.preventDefault();
 
-  if(!district.value||!fio.value||!org.value){
+  if(!district.value.trim() || !fio.value.trim() || !org.value.trim()){
     msg.innerHTML="<div class='error'>❗ Заполните все поля</div>";
     return;
   }
 
   const fd=new FormData();
-  fd.append("district",district.value);
-  fd.append("fio",fio.value);
-  fd.append("organization",org.value);
+  fd.append("district",district.value.trim());
+  fd.append("fio",fio.value.trim());
+  fd.append("organization",org.value.trim());
 
   fetch(SCRIPT_URL,{method:"POST",body:fd})
     .then(r=>r.text())
     .then(t=>{
-      msg.innerHTML=t==="OK"
+      msg.innerHTML = t==="OK"
         ?"<div class='success'>✅ Данные сохранены</div>"
         :"<div class='error'>❌ Ошибка</div>";
     });
