@@ -2,130 +2,133 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Қатысушыларды тіркеу</title>
+<title>Регистрация</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body { font-family: Arial; background:#f4f6f8; padding:20px; }
-.container { max-width:420px; background:#fff; padding:20px; border-radius:10px; margin:auto; }
-label { font-weight:bold; margin-top:10px; display:block; }
-input, button { width:100%; padding:10px; margin-top:5px; }
-button { background:#1976d2; color:#fff; border:none; border-radius:5px; margin-top:15px; cursor:pointer; }
-
-.select-box { position:relative; }
-.options { position:absolute; width:100%; max-height:200px; overflow:auto; background:#fff; border:1px solid #ccc; display:none; z-index:10; }
-.option { padding:10px; cursor:pointer; }
-.option:hover { background:#1976d2; color:#fff; }
-
-.success { color:green; text-align:center; margin-top:10px; }
-.error { color:red; text-align:center; margin-top:10px; }
+body { font-family: Arial; background:#f4f6f8; padding:20px }
+.container {
+  max-width:420px; background:#fff; padding:20px;
+  border-radius:10px; margin:auto; box-shadow:0 4px 10px rgba(0,0,0,.1)
+}
+.logo img { max-width:160px; display:block; margin:auto }
+label { font-weight:bold; margin-top:12px; display:block }
+input,button { width:100%; padding:10px; margin-top:5px; font-size:16px }
+button { background:#1976d2; color:#fff; border:none; border-radius:5px }
+.options {
+  border:1px solid #ccc; max-height:200px; overflow:auto;
+  display:none; position:absolute; background:#fff; width:100%; z-index:10
+}
+.option { padding:8px; cursor:pointer }
+.option:hover { background:#1976d2; color:#fff }
+.select-box { position:relative }
+.success{color:green;text-align:center}
+.error{color:red;text-align:center}
 </style>
 </head>
 
 <body>
-
 <div class="container">
-<h2>Қатысушыны тіркеу</h2>
 
-<form id="regForm">
-
-<label>Аудан / Район</label>
-<div class="select-box">
-  <input type="text" id="districtInput" readonly placeholder="Районды таңдаңыз">
-  <div class="options" id="districtOptions"></div>
+<div class="logo">
+<img src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png">
 </div>
-<input type="hidden" name="district" id="districtHidden" required>
 
-<label>ТАӘ / ФИО</label>
+<form id="form">
+
+<label>Район</label>
 <div class="select-box">
-  <input type="text" id="fioInput" placeholder="ФИО таңдаңыз">
-  <div class="options" id="fioOptions"></div>
+<input id="districtInput" readonly placeholder="Выберите район">
+<div id="districtOptions" class="options"></div>
 </div>
-<input type="hidden" name="fio" id="fioHidden" required>
 
-<label>Мекеме / Учреждение</label>
-<input type="text" name="organization" id="orgInput" readonly>
+<label>ФИО</label>
+<div class="select-box">
+<input id="fioInput" placeholder="Начните ввод ФИО">
+<div id="fioOptions" class="options"></div>
+</div>
 
-<button type="submit">Жіберу</button>
+<label>Учреждение</label>
+<input id="orgInput" readonly>
+
+<button>Отправить</button>
 </form>
 
 <div id="result"></div>
 </div>
 
 <script>
-// ====== НАСТРОЙКИ ======
-const CSV_URL = "https://raw.githubusercontent.com/cmrito2020-web/cmrito/refs/heads/main/data.csv";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
+const CSV_URL = "https://raw.githubusercontent.com/USER/REPO/main/data.csv";
+const SCRIPT_URL = "https://script.google.com/macros/s/XXXX/exec";
 
-let data = [];
+let db = [];
 
-// ====== ЗАГРУЗКА CSV ======
 fetch(CSV_URL)
-  .then(r => r.text())
-  .then(text => {
-    const rows = text.split("\n").slice(1);
-    data = rows.map(r => {
-      const [district,fio,organization] = r.split(",");
-      return { district, fio, organization };
-    });
-    initDistricts();
+.then(r=>r.text())
+.then(t=>{
+  const lines = t.trim().split("\n").slice(1);
+  db = lines.map(l=>{
+    const [district,fio,org] = l.split(",");
+    return {district,fio,org};
   });
+  initDistricts();
+});
 
-// ====== РАЙОН ======
-function initDistricts() {
-  const districts = [...new Set(data.map(d => d.district))];
-  renderOptions(districts, districtOptions, val => {
-    districtInput.value = val;
-    districtHidden.value = val;
-    fioInput.value = fioHidden.value = orgInput.value = "";
-    initFio(val);
+function initDistricts(){
+  const uniq = [...new Set(db.map(x=>x.district))];
+  renderOptions(districtOptions, uniq, v=>{
+    districtInput.value=v;
+    districtOptions.style.display="none";
+    fioInput.value=""; orgInput.value="";
   });
 }
 
-// ====== ФИО ======
-function initFio(district) {
-  const fios = data.filter(d => d.district === district);
-  fioInput.oninput = () => {
-    const f = fioInput.value.toLowerCase();
-    renderOptions(
-      fios.filter(x => x.fio.toLowerCase().includes(f)).map(x => x.fio),
-      fioOptions,
-      val => {
-        fioInput.value = val;
-        fioHidden.value = val;
-        orgInput.value = fios.find(x => x.fio === val).organization;
-      }
-    );
-    fioOptions.style.display = "block";
-  };
-}
-
-// ====== ВСПОМОГАТЕЛЬНАЯ ======
-function renderOptions(list, box, onSelect) {
-  box.innerHTML = "";
-  list.forEach(v => {
-    const d = document.createElement("div");
-    d.className = "option";
-    d.textContent = v;
-    d.onclick = () => { onSelect(v); box.style.display="none"; };
+function renderOptions(box, list, onClick){
+  box.innerHTML="";
+  list.forEach(v=>{
+    const d=document.createElement("div");
+    d.className="option"; d.textContent=v;
+    d.onclick=()=>onClick(v);
     box.appendChild(d);
   });
-  box.style.display = "block";
+  box.style.display="block";
 }
 
-// ====== SUBMIT ======
-document.getElementById("regForm").addEventListener("submit", e => {
-  e.preventDefault();
-  fetch(SCRIPT_URL, { method:"POST", body:new FormData(e.target) })
-    .then(r=>r.text())
-    .then(t=>{
-      result.innerHTML = t.trim()=="OK"
-        ? "<div class='success'>✅ Жіберілді</div>"
-        : "<div class='error'>❌ Қате</div>";
-      e.target.reset();
-    });
-});
-</script>
+districtInput.onclick=()=>{
+  renderOptions(districtOptions,[...new Set(db.map(x=>x.district))],v=>{
+    districtInput.value=v;
+    districtOptions.style.display="none";
+  });
+};
 
+fioInput.oninput=()=>{
+  if(!districtInput.value) return;
+  const list=db
+    .filter(x=>x.district===districtInput.value)
+    .filter(x=>x.fio.toLowerCase().includes(fioInput.value.toLowerCase()));
+  renderOptions(fioOptions,list.map(x=>x.fio),v=>{
+    fioInput.value=v;
+    const row=db.find(x=>x.fio===v);
+    orgInput.value=row.org;
+    fioOptions.style.display="none";
+  });
+};
+
+document.getElementById("form").onsubmit=e=>{
+  e.preventDefault();
+  const data = districtInput.value+";"+fioInput.value+";"+orgInput.value;
+
+  const fd=new FormData();
+  fd.append("data",data);
+
+  fetch(SCRIPT_URL,{method:"POST",body:fd})
+  .then(r=>r.text())
+  .then(t=>{
+    result.innerHTML=t==="OK"
+      ?"<div class='success'>Успешно</div>"
+      :"<div class='error'>Ошибка</div>";
+  });
+};
+</script>
 </body>
 </html>
