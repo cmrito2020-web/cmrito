@@ -9,7 +9,8 @@
 body { font-family: Arial; background:#f4f6f8; padding:20px }
 .container {
   max-width:420px; background:#fff; padding:20px;
-  border-radius:10px; margin:auto; box-shadow:0 4px 10px rgba(0,0,0,.1)
+  border-radius:10px; margin:auto;
+  box-shadow:0 4px 10px rgba(0,0,0,.1)
 }
 .logo img { max-width:160px; display:block; margin:auto }
 label { font-weight:bold; margin-top:12px; display:block }
@@ -17,8 +18,14 @@ input,button { width:100%; padding:10px; margin-top:5px; font-size:16px }
 button { background:#1976d2; color:#fff; border:none; border-radius:5px }
 .select-box { position:relative }
 .options {
-  border:1px solid #ccc; max-height:200px; overflow:auto;
-  display:none; position:absolute; background:#fff; width:100%; z-index:10
+  border:1px solid #ccc;
+  max-height:200px;
+  overflow:auto;
+  display:none;
+  position:absolute;
+  background:#fff;
+  width:100%;
+  z-index:10
 }
 .option { padding:8px; cursor:pointer }
 .option:hover { background:#1976d2; color:#fff }
@@ -70,19 +77,27 @@ const result = document.getElementById("result");
 
 let db = [];
 
+// Загрузка CSV
 fetch(CSV_URL)
   .then(r => r.text())
   .then(t => {
     const lines = t.trim().split("\n").slice(1);
-    db = lines.map(l => {
-      const [district, fio, organization] = l.split(",");
-      return { district, fio, organization };
-    });
+
+    db = lines
+      .map(l => l.split(","))
+      .filter(arr => arr[1] && arr[1].trim() !== "")
+      .map(arr => ({
+        district: (arr[0] || "").trim(),
+        fio: (arr[1] || "").trim(),
+        organization: (arr[2] || "").trim()
+      }));
+
     initDistricts();
   });
 
+// Районы
 function initDistricts(){
-  const uniq = [...new Set(db.map(x => x.district))];
+  const uniq = [...new Set(db.map(x => x.district).filter(x => x))];
   renderOptions(districtOptions, uniq, v => {
     districtInput.value = v;
     districtOptions.style.display = "none";
@@ -103,10 +118,11 @@ function renderOptions(box, list, onClick){
   box.style.display = "block";
 }
 
+// выбор района
 districtInput.onclick = () => {
   renderOptions(
     districtOptions,
-    [...new Set(db.map(x => x.district))],
+    [...new Set(db.map(x => x.district).filter(x => x))],
     v => {
       districtInput.value = v;
       districtOptions.style.display = "none";
@@ -114,26 +130,30 @@ districtInput.onclick = () => {
   );
 };
 
+// поиск ФИО (работает даже без района)
 fioInput.oninput = () => {
-  if (!districtInput.value) return;
+  const q = fioInput.value.toLowerCase();
 
-  const list = db
-    .filter(x => x.district === districtInput.value)
-    .filter(x => x.fio.toLowerCase().includes(fioInput.value.toLowerCase()));
+  const list = db.filter(x =>
+    x.fio.toLowerCase().includes(q) &&
+    (!districtInput.value || x.district === districtInput.value)
+  );
 
   renderOptions(fioOptions, list.map(x => x.fio), v => {
     fioInput.value = v;
     const row = db.find(x => x.fio === v);
-    orgInput.value = row.organization;
+    orgInput.value = row.organization || "";
+    districtInput.value = row.district || districtInput.value;
     fioOptions.style.display = "none";
   });
 };
 
+// отправка
 document.getElementById("form").onsubmit = e => {
   e.preventDefault();
 
-  if (!districtInput.value || !fioInput.value) {
-    result.innerHTML = "<div class='error'>Заполните все поля</div>";
+  if (!fioInput.value) {
+    result.innerHTML = "<div class='error'>Введите ФИО</div>";
     return;
   }
 
