@@ -2,19 +2,36 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Регистрация участника</title>
+<title>Қатысушыны тіркеу</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-body{font-family:Arial;background:#f4f6f8;padding:20px}
-.container{
-  max-width:420px;background:#fff;padding:20px;margin:auto;
-  border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.1)
+body{
+  font-family:Arial;
+  background:#f4f6f8;
+  padding:20px
 }
-.logo img{max-width:160px;display:block;margin:auto}
-label{font-weight:bold;margin-top:12px;display:block}
+.container{
+  max-width:420px;
+  background:#fff;
+  padding:20px;
+  margin:auto;
+  border-radius:10px;
+  box-shadow:0 4px 10px rgba(0,0,0,.1)
+}
+.logo img{
+  max-width:160px;
+  display:block;
+  margin:0 auto 10px
+}
+h2{text-align:center}
+label{
+  font-weight:bold;
+  margin-top:12px;
+  display:block
+}
 input{
-  width:90%;
+  width:100%;
   padding:10px;
   margin-top:5px;
   font-size:16px
@@ -28,14 +45,8 @@ button{
   color:#fff;
   border:none;
   border-radius:5px;
+  cursor:pointer
 }
-.select{position:relative}
-.list{
-  position:absolute;width:100%;background:#fff;border:1px solid #ccc;
-  max-height:180px;overflow:auto;display:none;z-index:10
-}
-.item{padding:8px;cursor:pointer}
-.item:hover{background:#1976d2;color:#fff}
 .success{color:green;text-align:center;margin-top:10px}
 .error{color:red;text-align:center;margin-top:10px}
 </style>
@@ -47,29 +58,22 @@ button{
 <div class="logo">
 <img src="https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/logo%20new%20alpha.png">
 </div>
-<h2 style="text-align:center">Тіркеу</h2>
+
+<h2>Қатысушыны тіркеу</h2>
+
 <form id="form">
 
-<!-- РАЙОН -->
-<label>Аудан *</label>
-<div class="select">
-  <input id="district" readonly placeholder="Аймақты таңдаңыз">
-  <div id="districtList" class="list"></div>
-</div>
+<label>Аудан / Қала *</label>
+<input name="district" required>
 
-<!-- ФИО -->
-<label>Тегі Аты Әкесінің Аты *</label>
-<div class="select">
-  <input id="fio" placeholder="Аты жөнін таңдаңыз немесе енгізіңіз">
-  <div id="fioList" class="list"></div>
-</div>
+<label>Ұйымның атауы *</label>
+<input name="organization" required>
 
-<!-- УЧРЕЖДЕНИЕ -->
-<label>Білім беру ұйымы *</label>
-<div class="select">
-  <input id="org" placeholder="Мекемені таңдаңыз немесе енгізіңіз">
-  <div id="orgList" class="list"></div>
-</div>
+<label>Толық аты-жөні *</label>
+<input name="fio" required>
+
+<label>Қызмет атауы *</label>
+<input name="position" required>
 
 <button type="submit">Жіберу</button>
 </form>
@@ -78,163 +82,33 @@ button{
 </div>
 
 <script>
-const CSV_URL = "https://raw.githubusercontent.com/cmrito2020-web/cmrito/main/data.csv";
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycby-SzEGV6nJz-QheTCd-UrldJ23-eF_hsm5oQMwHHMoRxNZa1EFCtL0lMhCeWIFK8Y/exec";
 
-const district = document.getElementById("district");
-const fio = document.getElementById("fio");
-const org = document.getElementById("org");
-
-const districtList = document.getElementById("districtList");
-const fioList = document.getElementById("fioList");
-const orgList = document.getElementById("orgList");
+const form = document.getElementById("form");
 const msg = document.getElementById("msg");
 
-let db = [];
-
-// ===== ЗАГРУЗКА CSV =====
-fetch(CSV_URL)
-  .then(r=>r.text())
-  .then(t=>{
-    const rows = t.trim().split("\n").slice(1);
-    db = rows
-      .map(r=>r.split(","))
-      .filter(c => (c[1]||"").trim() !== "")
-      .map(c=>({
-        district:(c[0]||"").trim(),
-        fio:(c[1]||"").trim(),
-        org:(c[2]||"").trim()
-      }));
-    loadDistricts();
-  });
-
-// ===== РАЙОН =====
-function loadDistricts(){
-  const list=[...new Set(db.map(x=>x.district).filter(x=>x))].sort();
-  districtList.innerHTML="";
-  list.forEach(v=>{
-    const d=document.createElement("div");
-    d.className="item";
-    d.textContent=v;
-    d.onclick=()=>{
-      district.value=v;
-      districtList.style.display="none";
-      fio.value="";
-      org.value="";
-    };
-    districtList.appendChild(d);
-  });
-}
-district.onclick=()=>districtList.style.display="block";
-
-// ===== ФИО (ПО РАЙОНУ + ОБЩИЕ) =====
-function showFioList(){
-  fioList.innerHTML="";
-  orgList.style.display="none";
-
-  if(!district.value) return;
-
-  const q=fio.value.toLowerCase();
-
-  const byDistrict = db.filter(x =>
-    x.district===district.value &&
-    x.fio.toLowerCase().includes(q)
-  );
-
-  const common = db.filter(x =>
-    !x.district &&
-    x.fio.toLowerCase().includes(q)
-  );
-
-  const map=new Map();
-  [...byDistrict, ...common].forEach(x=>{
-    if(!map.has(x.fio)) map.set(x.fio,x);
-  });
-
-  const merged=[...map.values()];
-
-  merged.forEach(x=>{
-    const d=document.createElement("div");
-    d.className="item";
-    d.textContent=x.fio + (x.district ? "" : " (спикер)");
-    d.onclick=()=>{
-      fio.value=x.fio;
-      if(x.org) org.value=x.org;
-      fioList.style.display="none";
-    };
-    fioList.appendChild(d);
-  });
-
-  fioList.style.display = merged.length ? "block" : "none";
-}
-
-// 🔧 ВАЖНО: и при вводе, и при клике
-fio.oninput = showFioList;
-fio.onclick = showFioList;
-
-// ===== УЧРЕЖДЕНИЕ (ПО РАЙОНУ + ОБЩИЕ) =====
-function showOrgList(){
-  orgList.innerHTML="";
-  if(!district.value) return;
-
-  const q=org.value.toLowerCase();
-
-  const byDistrict=db
-    .filter(x=>x.district===district.value && x.org)
-    .map(x=>x.org);
-
-  const common=db
-    .filter(x=>!x.district && x.org)
-    .map(x=>x.org);
-
-  const uniq=[...new Set([...byDistrict,...common])]
-    .filter(v=>v.toLowerCase().includes(q))
-    .sort();
-
-  uniq.forEach(v=>{
-    const d=document.createElement("div");
-    d.className="item";
-    d.textContent=v;
-    d.onclick=()=>{
-      org.value=v;
-      orgList.style.display="none";
-    };
-    orgList.appendChild(d);
-  });
-
-  orgList.style.display = uniq.length ? "block" : "none";
-}
-
-org.oninput = showOrgList;
-org.onclick = showOrgList;
-
-// ===== ОТПРАВКА =====
-document.getElementById("form").onsubmit=e=>{
+form.onsubmit = e => {
   e.preventDefault();
 
-  if(!district.value.trim() || !fio.value.trim() || !org.value.trim()){
-    msg.innerHTML="<div class='error'>❗ Барлық өрістерді толтырыңыз</div>";
-    return;
-  }
-
-  const fd=new FormData();
-  fd.append("district",district.value.trim());
-  fd.append("fio",fio.value.trim());
-  fd.append("organization",org.value.trim());
-
-  fetch(SCRIPT_URL,{method:"POST",body:fd})
-    .then(r=>r.text())
-    .then(t=>{
-      if(t === "OK"){
-        // переход через 0.5 сек
-        setTimeout(()=>{
-          window.location.href = "thanks.html";
-        }, 500);
-      } else {
-        msg.innerHTML = "<div class='error'>❌ Қате</div>";
-      }
-    });
+  fetch(SCRIPT_URL,{
+    method:"POST",
+    body:new FormData(form)
+  })
+  .then(r=>r.text())
+  .then(t=>{
+    if(t==="OK"){
+      msg.innerHTML="<div class='success'>✅ Сәтті жіберілді</div>";
+      form.reset();
+    }else{
+      msg.innerHTML="<div class='error'>❌ Қате</div>";
+    }
+  })
+  .catch(()=>{
+    msg.innerHTML="<div class='error'>❌ Байланыс қатесі</div>";
+  });
 };
 </script>
+
 </body>
 </html>
